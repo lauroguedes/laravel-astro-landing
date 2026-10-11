@@ -1,5 +1,8 @@
 # Linking the landing to the application
 
+For where each site is served, and links from the application back to the
+landing (`LANDING_URL`), see [domains.md](domains.md).
+
 The landing is a static site on a different host, so the only connection to the
 application is a URL.
 

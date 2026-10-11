@@ -5,6 +5,32 @@ All notable changes to `laravel-astro-landing` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.1.0 - 2026-10-11
+
+### Added
+
+- `LANDING_URL` (`config('landing.url')`) tells the application where visitors
+  reach the landing. `landing:install` writes the dev server's address to `.env`
+  and `.env.example`.
+- `landing:install` asks whether to send the application's home page to the
+  landing (`--redirect-root`). It rewrites the home route in `routes/web.php` to
+  redirect to `LANDING_URL`, in plain Laravel that keeps working in production
+  without the package, and keeps the old page wherever `LANDING_URL` is not set.
+- `landing:install` asks where visitors will reach the landing. Under a path of
+  the application's domain (`--base=/lp`) it sets `base` in the landing's
+  `astro.config`.
+- `docs/domains.md`: separate domains, a landing under a path (Nginx, Cloudflare
+  Worker, or served from the application's `public/`), and an application under
+  paths of the landing's domain.
+
+### Upgrading
+
+Run `php artisan landing:install` again only for a new landing. For an existing
+one, add `'url' => env('LANDING_URL'),` to `config/landing.php` (the installer
+does this for you when it finds the key missing) and `LANDING_URL` to `.env`.
+Without the key in the application's own file, production, which runs without
+this package, reads `config('landing.url')` as null.
+
 ## 1.0.1 - 2026-10-11
 
 ### Fixed

@@ -42,6 +42,8 @@ and where it deploys. Every question has a flag:
 | `--pm=` | `npm`, `pnpm`, `yarn`, `bun`; defaults to the application's |
 | `--add=` | an integration for `astro add`, repeatable |
 | `--deploy=` | `cloudflare-pages`, `netlify`, `vercel`, `github-pages`, `ssh`, `none` |
+| `--base=` | serve the landing under this path of the application's domain, e.g. `/lp`; sets `base` in `astro.config` |
+| `--redirect-root` | rewrite the home route in `routes/web.php` to redirect to `LANDING_URL` |
 | `--skip-install` | scaffold without installing dependencies |
 
 Only free themes can be installed: a paid theme has no public repository. Buy it,
@@ -50,6 +52,26 @@ then install from its repository with `--template=owner/repo`.
 The installer also adds the landing's `node_modules`, `dist` and `.astro` to
 `.gitignore` and adds `@source not '../../landing';` to `resources/css/app.css`,
 so Tailwind in the application does not pick up the landing's classes.
+
+## Domains and routes
+
+The recommended setup gives each site its own address: the landing on
+`example.com`, the application on `app.example.com`. The application knows where
+the landing is from `LANDING_URL`, read as `config('landing.url')`. Link back to
+the landing with it, never with a hardcoded URL:
+
+```blade
+<a href="{{ config('landing.url') ?? url('/') }}">{{ config('app.name') }}</a>
+```
+
+A landing under a path of the application's domain (`example.com/lp`) needs
+`base: '/lp'` in `astro.config` and a proxy rule on the application's server;
+`docs/domains.md` in the package has the Nginx and Cloudflare recipes. Never add
+Laravel routes to serve landing pages.
+
+The home route `landing:install` writes reads only `config('landing.url')`. Keep
+it that way: this package is a development dependency, so application code that
+references its classes breaks in production.
 
 ## Linking the landing to the application
 
@@ -123,6 +145,7 @@ To change what every generated workflow looks like, publish the stubs and edit t
 `config/landing.php`:
 
 - `path` (`LANDING_PATH`): where the landing is.
+- `url` (`LANDING_URL`): where visitors reach the landing in this environment; null when the application does not know.
 - `package_manager` (`LANDING_PACKAGE_MANAGER`): forces one; otherwise the landing's lockfile decides.
 - `dev.enabled` (`LANDING_DEV`): whether `composer run dev` starts the landing (Laravel 13.16+).
 - `dev.name`: the process name shown by `php artisan dev`.

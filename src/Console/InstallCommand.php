@@ -9,13 +9,16 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Process;
 use LauroGuedes\AstroLanding\Exceptions\AstroLandingException;
+use LauroGuedes\AstroLanding\Support\AstroConfig;
 use LauroGuedes\AstroLanding\Support\DeployTarget;
+use LauroGuedes\AstroLanding\Support\HomeRoute;
 use LauroGuedes\AstroLanding\Support\Landing;
 use LauroGuedes\AstroLanding\Support\PackageManager;
 use LauroGuedes\AstroLanding\Support\TemplateResolver;
 use LauroGuedes\AstroLanding\Support\Theme;
 use LauroGuedes\AstroLanding\Support\ThemeCatalog;
 
+use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\spin;
@@ -67,6 +70,8 @@ final class InstallCommand extends Command
         {--add=* : An Astro integration to add, e.g. --add=tailwind --add=sitemap}
         {--deploy= : cloudflare-pages, netlify, vercel, github-pages, ssh or none}
         {--branch=main : Branch whose pushes deploy the landing}
+        {--base= : Serve the landing under this path of the application\'s domain (e.g. /lp) rather than on its own domain}
+        {--redirect-root : Point the application\'s home page (/) at the landing}
         {--skip-install : Scaffold only, without installing dependencies}
         {--force : Overwrite the published config and the deploy workflow}';
 
@@ -118,6 +123,14 @@ final class InstallCommand extends Command
             return self::FAILURE;
         }
 
+        $base = $this->servedAt();
+
+        if ($base === false) {
+            return self::FAILURE;
+        }
+
+        $redirectRoot = $this->wantsRootRedirect($files, $landing);
+
         $this->newLine();
         $this->components->info(sprintf('Creating the landing in %s/ from "%s" with %s.', $path, $template, $manager->value));
 
@@ -153,6 +166,16 @@ final class InstallCommand extends Command
         $this->ignoreBuildOutput($files, $landing, $path);
         $this->keepOutOfTailwind($files, $landing, $path);
 
+        if ($base !== null) {
+            $this->setBase($files, $landing->absolutePath($path), $base);
+        }
+
+        $this->writeLandingUrl($files, $landing, $base);
+
+        if ($redirectRoot) {
+            $this->redirectHome($files, $landing);
+        }
+
         if ($target instanceof DeployTarget) {
             $this->call('landing:workflow', array_filter([
                 'target' => $target->value,
@@ -163,7 +186,7 @@ final class InstallCommand extends Command
 
         $this->newLine();
         $this->components->info('The landing is ready. What is left:');
-        $this->components->bulletList($this->checklist($path, $manager, $target, $configured));
+        $this->components->bulletList($this->checklist($path, $manager, $target, $configured, $base, $redirectRoot));
         $this->newLine();
 
         return self::SUCCESS;
@@ -436,6 +459,78 @@ final class InstallCommand extends Command
     }
 
     /**
+     * Null when the landing gets its own domain, the path when it is served
+     * under one of the application's, or false for a path that cannot be one.
+     *
+     * Its own domain is the default and the recommendation: it is the setup
+     * where the landing deploys without touching the application's server.
+     */
+    private function servedAt(): string|false|null
+    {
+        $given = $this->option('base');
+
+        if (! is_string($given) || $given === '') {
+            if (! $this->input->isInteractive()) {
+                return null;
+            }
+
+            $where = select(
+                label: 'Where will visitors reach the landing?',
+                options: [
+                    'domain' => 'On its own domain or subdomain, e.g. example.com with the app on app.example.com',
+                    'path' => 'Under a path of the application\'s domain, e.g. example.com/lp',
+                ],
+                default: 'domain',
+                hint: 'Its own domain needs nothing in front of it. A path needs a proxy rule on the application\'s domain.',
+            );
+
+            if ($where === 'domain') {
+                return null;
+            }
+
+            $given = text(
+                label: 'Which path?',
+                placeholder: '/lp',
+                required: true,
+                validate: static fn (string $value): ?string => AstroConfig::normaliseBase($value) === null ? 'A path such as /lp: letters, digits, dots, dashes and slashes.' : null,
+            );
+        }
+
+        $base = AstroConfig::normaliseBase($given);
+
+        if ($base === null) {
+            $this->components->error(sprintf('--base takes a path such as /lp, not "%s".', $given));
+
+            return false;
+        }
+
+        return $base;
+    }
+
+    /**
+     * Asked only when there is a routes/web.php to change, and never assumed
+     * without being asked: it changes what the application's home page does.
+     */
+    private function wantsRootRedirect(Filesystem $files, Landing $landing): bool
+    {
+        if ($this->option('redirect-root') === true) {
+            return true;
+        }
+
+        $routes = $landing->basePath('routes/web.php');
+
+        if (! $this->input->isInteractive() || ! $files->exists($routes) || HomeRoute::isRedirecting((string) $files->get($routes))) {
+            return false;
+        }
+
+        return confirm(
+            label: 'Send the application\'s home page (/) to the landing?',
+            default: true,
+            hint: 'It redirects to LANDING_URL, and keeps serving today\'s page wherever LANDING_URL is not set.',
+        );
+    }
+
+    /**
      * create-astro is told everything so it never prompts: a prompt from a
      * child process with no TTY is a hang, not a question.
      *
@@ -542,6 +637,8 @@ final class InstallCommand extends Command
         if ($files->exists($destination) && $this->option('force') !== true) {
             $this->components->twoColumnDetail('config/landing.php', '<fg=yellow>already exists, left alone</>');
 
+            $this->addUrlKey($files, $destination);
+
             if ($pin instanceof PackageManager) {
                 $this->components->warn(sprintf('Set LANDING_PACKAGE_MANAGER=%s until the landing has a lockfile, or later commands will use another package manager.', $pin->value));
             }
@@ -568,6 +665,40 @@ final class InstallCommand extends Command
         $this->components->twoColumnDetail('config/landing.php', '<fg=green>published</>');
 
         return true;
+    }
+
+    /**
+     * A config published by 1.0 has no `url` key. While this package is
+     * installed its defaults fill the gap, but production runs without the
+     * package, where config('landing.url') would then always be null and the
+     * home page would never reach the landing. So the key is added to the
+     * application's file, next to `path`, and nothing else in it changes.
+     */
+    private function addUrlKey(Filesystem $files, string $config): void
+    {
+        $contents = (string) $files->get($config);
+
+        if (preg_match('/[\'"]url[\'"]\s*=>/', $contents) === 1) {
+            return;
+        }
+
+        $updated = preg_replace(
+            '/^([ \t]*)([\'"]path[\'"]\s*=>[^\n]*,)[ \t]*$/m',
+            "$1$2\n\n$1'url' => env('LANDING_URL'),",
+            $contents,
+            1,
+            $count,
+        );
+
+        if ($count !== 1 || ! is_string($updated)) {
+            $this->components->warn("Add 'url' => env('LANDING_URL') to config/landing.php: production reads it from there.");
+
+            return;
+        }
+
+        $files->put($config, $updated);
+
+        $this->components->twoColumnDetail('config/landing.php', "<fg=green>added 'url' => env('LANDING_URL')</>");
     }
 
     /**
@@ -636,17 +767,103 @@ final class InstallCommand extends Command
     }
 
     /**
+     * Astro builds every link and asset under `base`, so the landing works
+     * behind a proxy rule that sends that path of the application's domain to
+     * wherever the landing is deployed.
+     */
+    private function setBase(Filesystem $files, string $directory, string $base): void
+    {
+        $file = AstroConfig::find($directory);
+        $updated = $file === null ? null : AstroConfig::withBase((string) $files->get($directory.'/'.$file), $base);
+
+        if ($file === null || $updated === null) {
+            $this->components->warn(sprintf("Could not set base in the landing's astro.config. Add `base: '%s'` to its defineConfig() yourself.", $base));
+
+            return;
+        }
+
+        $files->put($directory.'/'.$file, $updated);
+
+        $this->components->twoColumnDetail($file, "<fg=green>base: '{$base}'</>");
+    }
+
+    /**
+     * LANDING_URL for local development: the Astro dev server. Written to .env
+     * as well as .env.example because both are this machine's, and the first
+     * thing anybody does next is run the two side by side; every other
+     * environment sets its own.
+     */
+    private function writeLandingUrl(Filesystem $files, Landing $landing, ?string $base): void
+    {
+        $url = 'http://localhost:4321'.($base === null ? '' : $base.'/');
+        $block = "\n# Where visitors reach the Astro landing in this environment.\nLANDING_URL={$url}\n";
+
+        foreach (['.env.example', '.env'] as $file) {
+            $path = $landing->basePath($file);
+
+            if (! $files->exists($path)) {
+                continue;
+            }
+
+            $contents = (string) $files->get($path);
+
+            if (preg_match('/^\s*#?\s*LANDING_URL=/m', $contents) === 1) {
+                $this->components->twoColumnDetail($file, '<fg=yellow>already has LANDING_URL</>');
+
+                continue;
+            }
+
+            $files->append($path, ($contents === '' || str_ends_with($contents, "\n") ? '' : "\n").$block);
+
+            $this->components->twoColumnDetail($file, '<fg=green>LANDING_URL='.$url.'</>');
+        }
+    }
+
+    private function redirectHome(Filesystem $files, Landing $landing): void
+    {
+        $routes = $landing->basePath('routes/web.php');
+
+        if (! $files->exists($routes)) {
+            $this->components->warn('There is no routes/web.php to point at the landing.');
+
+            return;
+        }
+
+        $contents = (string) $files->get($routes);
+
+        if (HomeRoute::isRedirecting($contents)) {
+            $this->components->twoColumnDetail('routes/web.php', '<fg=yellow>already sends / to the landing</>');
+
+            return;
+        }
+
+        $updated = HomeRoute::rewrite($contents);
+
+        if ($updated === null) {
+            $this->components->warn('The home route in routes/web.php is not one this can rewrite safely. To send it to the landing, return this from it:');
+            $this->line("    redirect()->away(config('landing.url'))");
+
+            return;
+        }
+
+        $files->put($routes, $updated);
+
+        $this->components->twoColumnDetail('routes/web.php', '<fg=green>/ redirects to LANDING_URL</>');
+    }
+
+    /**
      * @return list<string>
      */
-    private function checklist(string $path, PackageManager $manager, ?DeployTarget $target, bool $configured): array
+    private function checklist(string $path, PackageManager $manager, ?DeployTarget $target, bool $configured, ?string $base, bool $redirectRoot): array
     {
         $run = implode(' ', $manager->run('dev'));
+        $local = 'http://localhost:4321'.($base === null ? '' : $base.'/');
 
         $steps = [
             ! $configured
                 ? sprintf('Start it with `%s` in %s/ until the config points at it.', $run, $path)
                 : (class_exists(DevCommands::class)
-                ? sprintf('`composer run dev` now starts the landing as well, at http://localhost:4321. On its own: `php artisan landing:dev`, or `%s` in %s/.', $run, $path)
+                ? sprintf('`composer run dev` now starts the landing as well, at %s. On its own: `php artisan landing:dev`, or `%s` in %s/.', $local, $run, $path)
                 : sprintf('Start it with `php artisan landing:dev`, or `%s` in %s/.', $run, $path)),
             sprintf('Set `site` in %s/astro.config.mjs to the landing\'s public URL. Canonical links and the sitemap are built from it.', $path),
         ];
@@ -657,6 +874,14 @@ final class InstallCommand extends Command
 
         if (! $target instanceof DeployTarget) {
             $steps[] = 'Deploy it with `php artisan landing:workflow` once you know where it goes.';
+        }
+
+        $steps[] = $base === null
+            ? 'Set LANDING_URL in each environment to where visitors reach the landing, e.g. https://example.com.'
+            : sprintf('Set LANDING_URL in each environment to https://<your-domain>%1$s/, and send %1$s/* on that domain to the deployed landing. docs/domains.md has Nginx and Cloudflare recipes.', $base);
+
+        if ($redirectRoot) {
+            $steps[] = 'The application\'s / now redirects to LANDING_URL wherever it is set, and serves its old page wherever it is not.';
         }
 
         $steps[] = sprintf('If the application runs ESLint, Prettier or TypeScript from the root, add %s/ to their ignore lists.', $path);

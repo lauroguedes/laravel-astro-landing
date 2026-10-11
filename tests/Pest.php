@@ -40,7 +40,9 @@ function fakeProcesses(array $exitCodes = [], array $templateFiles = []): void
             file_put_contents($absolute.'/package.json', '{"name":"landing","scripts":{"dev":"astro dev","build":"astro build"}}');
 
             foreach ($templateFiles as $file) {
-                file_put_contents($absolute.'/'.$file, '');
+                file_put_contents($absolute.'/'.$file, str_starts_with($file, 'astro.config')
+                    ? "import { defineConfig } from 'astro/config';\n\nexport default defineConfig({\n  site: 'https://example.com',\n});\n"
+                    : '');
             }
         }
 

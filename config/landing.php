@@ -19,6 +19,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Landing URL
+    |--------------------------------------------------------------------------
+    |
+    | Where visitors reach the landing in this environment: its own domain
+    | (https://example.com) or a path of the application's domain
+    | (https://example.com/lp). The application uses it to link back to the
+    | landing, and landing:install can point the application's home page at
+    | it. Null means the application does not know about a landing, and that
+    | home page keeps serving what it served before.
+    |
+    | This file belongs to the application, so reading it needs nothing from
+    | this package: it is safe in production, where the package is not
+    | installed.
+    |
+    */
+
+    'url' => env('LANDING_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Package manager
     |--------------------------------------------------------------------------
     |

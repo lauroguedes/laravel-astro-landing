@@ -218,6 +218,10 @@ it('installs with defaults when nobody is at the keyboard', function (): void {
 });
 
 it('asks for everything it was not told', function (): void {
+    fakeProcesses(templateFiles: ['astro.config.mjs']);
+    $this->file('routes/web.php', "<?php\n\nuse Illuminate\\Support\\Facades\\Route;\n\nRoute::get('/', function () {\n    return view('welcome');\n});\n");
+    $this->file('.env', "APP_URL=http://localhost\n");
+
     Http::fake([
         'astro.build/themes/1/*' => Http::response(file_get_contents(__DIR__.'/../Fixtures/catalog.html')),
         'astro.build/themes/details/kairo-saas/' => Http::response(file_get_contents(__DIR__.'/../Fixtures/theme-subdirectory.html')),
@@ -246,7 +250,17 @@ it('asks for everything it was not told', function (): void {
             'ssh' => 'Your own server, over SSH and rsync',
             'none' => 'Nowhere yet, no workflow',
         ])
+        ->expectsChoice('Where will visitors reach the landing?', 'path', [
+            'domain' => 'On its own domain or subdomain, e.g. example.com with the app on app.example.com',
+            'path' => 'Under a path of the application\'s domain, e.g. example.com/lp',
+        ])
+        ->expectsQuestion('Which path?', 'lp/')
+        ->expectsConfirmation('Send the application\'s home page (/) to the landing?', 'yes')
         ->assertSuccessful();
+
+    expect(file_get_contents($this->root.'/site/astro.config.mjs'))->toContain("base: '/lp',")
+        ->and(file_get_contents($this->root.'/routes/web.php'))->toContain("redirect()->away(config('landing.url'))")
+        ->and(file_get_contents($this->root.'/.env'))->toContain('LANDING_URL=http://localhost:4321/lp/');
 
     Process::assertRan(fn (PendingProcess $process): bool => commandLine($process) === 'pnpm dlx create-astro@latest site --template someone/themes/packages/kairo#v2 --no-install --no-git --skip-houston --yes');
     expect($this->root.'/.github/workflows/deploy-landing.yml')->toBeFile()
@@ -293,4 +307,92 @@ it('rejects a branch name before creating anything', function (): void {
     landingInstall(['--deploy' => 'netlify', '--branch' => '--upload-pack=x'])->assertFailed();
 
     Process::assertNothingRan();
+});
+
+describe('where the landing is served', function (): void {
+    beforeEach(function (): void {
+        fakeProcesses(templateFiles: ['astro.config.mjs']);
+        $this->file('.env', "APP_NAME=Laravel\n");
+        $this->file('.env.example', 'APP_NAME=Laravel');
+    });
+
+    it('points LANDING_URL at the dev server, once', function (): void {
+        landingInstall()->assertSuccessful();
+
+        (new Filesystem)->deleteDirectory($this->root.'/landing');
+        landingInstall()->assertSuccessful();
+
+        foreach (['.env', '.env.example'] as $file) {
+            $contents = file_get_contents($this->root.'/'.$file);
+
+            expect(substr_count($contents, 'LANDING_URL='))->toBe(1)
+                ->and($contents)->toContain("APP_NAME=Laravel\n\n# Where visitors reach the Astro landing in this environment.\nLANDING_URL=http://localhost:4321\n");
+        }
+
+        expect(file_get_contents($this->root.'/landing/astro.config.mjs'))->not->toContain('base:');
+    });
+
+    it('builds the landing under a path when asked to', function (): void {
+        landingInstall(['--base' => '/lp/'])
+            ->expectsOutputToContain('send /lp/* on that domain to the deployed landing')
+            ->assertSuccessful();
+
+        expect(file_get_contents($this->root.'/landing/astro.config.mjs'))
+            ->toBe("import { defineConfig } from 'astro/config';\n\nexport default defineConfig({\n  base: '/lp',\n  site: 'https://example.com',\n});\n")
+            ->and(file_get_contents($this->root.'/.env'))->toContain('LANDING_URL=http://localhost:4321/lp/');
+    });
+
+    it('rejects a path that is not one before creating anything', function (string $base): void {
+        landingInstall(['--base' => $base])->assertFailed();
+
+        Process::assertNothingRan();
+    })->with(['/', '../up', '/a b', '/x/../y']);
+
+    it('leaves the home route alone unless asked', function (): void {
+        $this->file('routes/web.php', $routes = "<?php\n\nRoute::get('/', function () {\n    return view('welcome');\n});\n");
+
+        landingInstall()->assertSuccessful();
+
+        expect(file_get_contents($this->root.'/routes/web.php'))->toBe($routes);
+    });
+
+    it('points the home route at the landing with --redirect-root, and only once', function (): void {
+        $this->file('routes/web.php', "<?php\n\nRoute::get('/', function () {\n    return view('welcome');\n})->name('home');\n");
+
+        landingInstall(['--redirect-root' => true])->assertSuccessful();
+
+        (new Filesystem)->deleteDirectory($this->root.'/landing');
+        landingInstall(['--redirect-root' => true])
+            ->expectsOutputToContain('already sends / to the landing')
+            ->assertSuccessful();
+
+        $routes = file_get_contents($this->root.'/routes/web.php');
+
+        expect(substr_count($routes, "config('landing.url')"))->toBe(2)
+            ->and($routes)->toContain(": view('welcome');\n})->name('home');");
+    });
+
+    it('says how to do it by hand when the home route is the application\'s own', function (): void {
+        $this->file('routes/web.php', $routes = "<?php\n\nRoute::get('/', [HomeController::class, 'show']);\n");
+
+        landingInstall(['--redirect-root' => true])
+            ->expectsOutputToContain("redirect()->away(config('landing.url'))")
+            ->assertSuccessful();
+
+        expect(file_get_contents($this->root.'/routes/web.php'))->toBe($routes);
+    });
+
+    it('adds the url key to a config published before it existed', function (): void {
+        $this->file('config/landing.php', "<?php\n\nreturn [\n\n    'path' => env('LANDING_PATH', 'landing'),\n\n    'package_manager' => env('LANDING_PACKAGE_MANAGER'),\n\n];\n");
+
+        landingInstall()->assertSuccessful();
+        (new Filesystem)->deleteDirectory($this->root.'/landing');
+        landingInstall()->assertSuccessful();
+
+        $config = file_get_contents($this->root.'/config/landing.php');
+
+        expect($config)->toContain("    'path' => env('LANDING_PATH', 'landing'),\n\n    'url' => env('LANDING_URL'),\n")
+            ->and(substr_count($config, "'url'"))->toBe(1)
+            ->and((require $this->root.'/config/landing.php'))->toHaveKey('url');
+    });
 });

@@ -18,6 +18,9 @@ Laravel application does not, through its own GitHub Actions workflow.
 - The landing talks to the application only over HTTP: links to the app's URLs and,
   at build time, `fetch()` calls to public API endpoints. Read those URLs from Astro
   environment variables (`astro:env` or `import.meta.env`), never hardcode them.
+- The application reaches the landing through `config('landing.url')` (`LANDING_URL`).
+  Use it for links back to the landing. Never reference this package's classes from
+  application code: it is a development dependency and is absent in production.
 
 ### Commands
 

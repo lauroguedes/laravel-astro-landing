@@ -35,9 +35,10 @@ It is a development dependency: nothing in it runs on the server that serves
 your application. The landing is deployed by GitHub Actions, not by PHP.
 
 `landing:install` asks where the landing lives, what it starts from, which
-package manager to use and where it deploys (plus, for an empty project, which
-integrations to add), then runs `create-astro`, installs the dependencies and
-wires the rest:
+package manager to use, where it deploys, where visitors will reach it, and
+whether the application's home page should send them there (plus, for an empty
+project, which integrations to add). Then it runs `create-astro`, installs the
+dependencies and wires the rest:
 
 ```
  ┌ What should the landing start from? ─────────────────────────┐
@@ -55,6 +56,9 @@ wires the rest:
 | Adds `landing/node_modules`, `dist`, `.astro` to `.gitignore` | Not every template ignores them |
 | Adds `@source not '../../landing';` to `resources/css/app.css` | Tailwind v4 scans the whole project and would put the landing's classes in the application's CSS |
 | Writes `.github/workflows/deploy-landing.yml` | If you chose a deploy target |
+| Adds `LANDING_URL` to `.env` and `.env.example` | So the application knows where the landing is |
+| Points `/` in `routes/web.php` at `LANDING_URL` | If you asked; see [Domains and routes](#domains-and-routes) |
+| Sets `base` in the landing's `astro.config` | If the landing is served under a path |
 
 Nothing that exists is overwritten without `--force`, and `.gitignore` and
 `app.css` are only ever appended to.
@@ -84,8 +88,42 @@ the empty template, the application's package manager and no workflow.
 php artisan landing:install --no-interaction \
   --path=landing --template=basics --pm=bun \
   --add=tailwind --add=sitemap \
-  --deploy=cloudflare-pages --branch=main
+  --deploy=cloudflare-pages --branch=main \
+  --redirect-root
 ```
+
+## Domains and routes
+
+The landing and the application are two sites, and the recommended setup gives
+each its own address:
+
+| | Production | Local |
+|---|---|---|
+| Landing | `https://example.com` | `http://localhost:4321` |
+| Application | `https://app.example.com` | `php artisan serve`, Herd, Valet |
+
+The application learns where the landing is from `LANDING_URL`
+(`config('landing.url')`). With `--redirect-root` (or *yes* to the question),
+the installer rewrites the application's home route to redirect there:
+
+```php
+Route::get('/', function () {
+    return config('landing.url')
+        ? redirect()->away(config('landing.url'))
+        : view('welcome');
+})->name('home');
+```
+
+It is plain Laravel reading the application's own config, so it keeps working in
+production, where this package is not installed, and wherever `LANDING_URL` is
+not set it serves the page it served before.
+
+To serve the landing under a path of the application's domain instead, such as
+`example.com/lp`, install with `--base=/lp`: Astro then builds every link and
+asset under `/lp/`, and one proxy rule on the application's domain sends `/lp/`
+to the landing. [docs/domains.md](docs/domains.md) has the Nginx and Cloudflare
+recipes for that, for serving the build from the application's own `public/`,
+and for putting the application under paths of the landing's domain.
 
 ## Running it
 
@@ -155,6 +193,7 @@ See [docs/deployment.md](docs/deployment.md) for each target in detail.
 ```php
 // config/landing.php
 'path' => env('LANDING_PATH', 'landing'),
+'url' => env('LANDING_URL'),                            // where visitors reach the landing
 'package_manager' => env('LANDING_PACKAGE_MANAGER'),   // null: the landing's lockfile decides
 'dev' => [
     'enabled' => (bool) env('LANDING_DEV', true),      // part of composer run dev
@@ -188,8 +227,8 @@ reaches the application, and how it deploys.
 
 ## Documentation
 
-[docs/](docs/README.md) covers templates, linking the landing to the
-application, and each deploy target.
+[docs/](docs/README.md) covers templates, domains and routes, linking the
+landing to the application, and each deploy target.
 
 ## License
 

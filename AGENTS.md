@@ -17,6 +17,7 @@ through `Illuminate\Foundation\DevCommands`.
 | `src/Support/TemplateResolver.php` | User input → create-astro `--template` value |
 | `src/Support/ThemeCatalog.php` | Reads astro.build/themes HTML (no API exists) |
 | `src/Support/DeployTarget.php`, `Workflow.php` | Workflow targets and rendering |
+| `src/Support/AstroConfig.php`, `HomeRoute.php` | Edits to the landing's `astro.config` (`base`) and the app's home route |
 | `stubs/workflows/*.yml.stub` | One workflow per target; publishable as `landing-stubs` |
 | `config/landing.php` | Published as `landing-config` |
 | `resources/boost/` | Guidelines and skill shipped to applications using Laravel Boost |
@@ -50,5 +51,8 @@ vendor/bin/phpstan analyse # level 8
 - A new deploy target needs: a `DeployTarget` case with `label()`, `secrets()`,
   `note()`; a stub using the documented placeholders; a row in README and
   `docs/deployment.md`; the Boost skill's table. The matrix test covers the rest.
+- Anything the installer writes into the application (routes, config usage) must
+  be plain Laravel: the package is a `require-dev` dependency and is absent in
+  production. `HomeRoute` only ever writes `config('landing.url')`.
 - Keep `README.md`, `docs/`, `resources/boost/` and `CHANGELOG.md` in step with
   behaviour changes.
