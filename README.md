@@ -1,7 +1,7 @@
 # Laravel Astro Landing
 
 [![Tests](https://github.com/lauroguedes/laravel-astro-landing/actions/workflows/tests.yml/badge.svg)](https://github.com/lauroguedes/laravel-astro-landing/actions/workflows/tests.yml)
-[![Latest Version](https://img.shields.io/github/v/release/lauroguedes/laravel-astro-landing?style=flat&label=packagist)](https://packagist.org/packages/lauroguedes/laravel-astro-landing)
+[![Latest Version](https://img.shields.io/github/v/release/lauroguedes/laravel-astro-landing?style=flat&label=packagist&cacheSeconds=3600)](https://packagist.org/packages/lauroguedes/laravel-astro-landing)
 [![Downloads](https://img.shields.io/packagist/dt/lauroguedes/laravel-astro-landing?style=flat&cacheSeconds=3600)](https://packagist.org/packages/lauroguedes/laravel-astro-landing/stats)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE.md)
 
