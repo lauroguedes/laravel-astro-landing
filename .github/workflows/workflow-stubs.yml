@@ -1,0 +1,38 @@
+name: workflow stubs
+
+# The deploy workflows this package writes into applications are YAML that
+# nobody here runs. actionlint checks every rendered combination of target and
+# package manager against GitHub's schema and the actions' inputs, so a typo in
+# a stub is caught here rather than on somebody's first push.
+
+on:
+  push:
+    branches: [main]
+    paths: ['stubs/**', 'src/Support/**', '.github/workflows/workflow-stubs.yml']
+  pull_request:
+    branches: [main]
+    paths: ['stubs/**', 'src/Support/**', '.github/workflows/workflow-stubs.yml']
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction
+
+      - name: Render every workflow
+        run: php tests/render-workflows.php build/workflows
+
+      - name: Lint the rendered workflows
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -shellcheck= build/workflows/*.yml
