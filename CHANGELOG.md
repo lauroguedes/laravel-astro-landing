@@ -5,6 +5,19 @@ All notable changes to `laravel-astro-landing` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.1 - 2026-10-11
+
+### Fixed
+
+- `landing:dev` (and so `composer run dev`) no longer leaves the Astro dev
+  server running on its own. Astro 7 moves the server into the background when
+  it detects an AI agent, which includes running `composer run dev` from an
+  agent's terminal; the script then returned at once and the server kept port
+  4321. `landing:dev` now sets `ASTRO_DEV_BACKGROUND=0`.
+- Stopping `landing:dev` stops the Astro server too. npm does not forward
+  SIGTERM to the script it runs, so the signal now goes to the whole process
+  tree.
+
 ## 1.0.0 - 2026-10-11
 
 First release.

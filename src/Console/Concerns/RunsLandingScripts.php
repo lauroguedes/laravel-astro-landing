@@ -6,6 +6,7 @@ namespace LauroGuedes\AstroLanding\Console\Concerns;
 
 use Illuminate\Support\Facades\Process;
 use LauroGuedes\AstroLanding\Support\Landing;
+use LauroGuedes\AstroLanding\Support\ProcessTree;
 
 /**
  * Runs a package.json script inside the landing, installing its dependencies
@@ -58,7 +59,19 @@ trait RunsLandingScripts
     {
         $process = Process::path($landing->absolutePath())
             ->forever()
-            ->env(['FORCE_COLOR' => '1'])
+            ->env([
+                'FORCE_COLOR' => '1',
+                /*
+                 * Astro 7 moves its dev server into the background when it
+                 * thinks an AI agent started it, which includes a developer
+                 * running `composer run dev` from an agent's terminal. The
+                 * script then returns at once, artisan exits with it, and the
+                 * server is left running on its own, holding port 4321. Any
+                 * value turns the detection off; "0" is the one Astro's own
+                 * docs use.
+                 */
+                'ASTRO_DEV_BACKGROUND' => '0',
+            ])
             ->start($command, function (string $type, string $output): void {
                 $this->output->write($output);
             });
@@ -66,12 +79,14 @@ trait RunsLandingScripts
         /*
          * A fresh clone runs two processes here, the install and then the
          * server, and each registers a handler. The install's has nothing to
-         * signal by then, and Symfony throws on signalling a process that has
-         * exited, so each handler checks first.
+         * signal by then, so each handler checks first. The whole tree is
+         * signalled, not just the package manager: see ProcessTree.
          */
         $this->trap([self::SIGINT, self::SIGTERM], static function (int $signal) use ($process): void {
-            if ($process->running()) {
-                $process->signal($signal);
+            $pid = $process->id();
+
+            if ($process->running() && $pid !== null) {
+                ProcessTree::signal($pid, $signal);
             }
         });
 
