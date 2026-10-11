@@ -31,12 +31,44 @@ jobs:
 
 {{ setup }}
 
+      # LANDING_URL is a repository variable (Settings → Secrets and variables →
+      # Actions → Variables): where visitors reach the landing, e.g.
+      # https://example.com, or https://example.com/lp/ under a path. Its origin
+      # is passed to Astro as --site, which canonical links, Open Graph URLs,
+      # the sitemap and robots.txt are built from, whatever the template's own
+      # config says. The path, if any, comes from `base` in astro.config.
       - name: Build landing
-        # Values for astro.config.mjs or astro:env go here, read from the
-        # repository's Actions variables (Settings → Secrets and variables).
-        # env:
-        #   PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
-        run: {{ build }}
+        env:
+          LANDING_URL: ${{ vars.LANDING_URL }}
+          # Anything else the landing reads at build time goes here too:
+          # PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
+        run: |
+          if [ -z "$LANDING_URL" ]; then
+            echo "::error::Set the LANDING_URL repository variable to the landing's public URL, e.g. https://example.com. Canonical links, Open Graph and the sitemap are built from it."
+            exit 1
+          fi
+          SITE=$(printf '%s' "$LANDING_URL" | sed -E 's#^(https?://[^/]+).*#\1#')
+          {{ build_with_site }}
+
+      # A canonical link pointing at another domain tells search engines to
+      # index that domain instead of this one, so a build that still points at
+      # a template's placeholder, or anywhere but LANDING_URL, is not deployed.
+      - name: Check SEO URLs
+        env:
+          LANDING_URL: ${{ vars.LANDING_URL }}
+        run: |
+          SITE=$(printf '%s' "$LANDING_URL" | sed -E 's#^(https?://[^/]+).*#\1#')
+          if [ "$SITE" != "https://example.com" ] && grep -rlF --include='*.html' --include='*.xml' --include='*.txt' 'https://example.com' dist; then
+            echo "::error::The files above still point at https://example.com. The template sets its URL somewhere --site does not reach; set it from LANDING_URL."
+            exit 1
+          fi
+          CANONICAL=$(grep -oE '<link[^>]+rel="?canonical"?[^>]*>' dist/index.html 2>/dev/null | grep -oE 'href="?[^" >]+' | head -1 | sed -E 's/^href="?//')
+          if [ -z "$CANONICAL" ]; then
+            echo "::warning::dist/index.html has no canonical link. docs/seo.md in lauroguedes/laravel-astro-landing shows how to add one."
+          elif [ "${CANONICAL#"$SITE/"}" = "$CANONICAL" ]; then
+            echo "::error::The home page's canonical link is $CANONICAL, which is not on $SITE."
+            exit 1
+          fi
 
       - name: Deploy to Netlify
         env:

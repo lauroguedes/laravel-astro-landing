@@ -35,9 +35,15 @@ it('renders a workflow GitHub can parse', function (DeployTarget $target, Packag
 
     $steps = array_merge(...array_map(static fn (array $job): array => $job['steps'], array_values($workflow['jobs'])));
     $runs = array_column($steps, 'run');
+    $named = array_column($steps, null, 'name');
 
     expect($runs)->toContain($manager->cleanInstall())
-        ->and($runs)->toContain(implode(' ', $manager->run('build')));
+        ->and($named['Build landing']['env']['LANDING_URL'])->toBe('${{ vars.LANDING_URL }}')
+        ->and($named['Build landing']['run'])->toContain($manager->runWithArguments('build', '--site "$SITE"'))
+        ->and($named['Build landing']['run'])->toContain('if [ -z "$LANDING_URL" ]; then')
+        ->and($named)->toHaveKey('Check SEO URLs')
+        ->and(array_search('Check SEO URLs', array_column($steps, 'name'), true))
+        ->toBe(array_search('Build landing', array_column($steps, 'name'), true) + 1);
 })->with(DeployTarget::cases())->with(PackageManager::cases());
 
 it('writes the workflow and lists the secrets it reads', function (): void {
@@ -47,6 +53,12 @@ it('writes the workflow and lists the secrets it reads', function (): void {
 
     expect(file_get_contents($this->root.'/.github/workflows/deploy-landing.yml'))
         ->toContain('netlify-cli@latest deploy --dir=dist --prod');
+});
+
+it('asks for the LANDING_URL variable the build stops without', function (): void {
+    $this->artisan('landing:workflow', ['target' => 'github-pages'])
+        ->expectsOutputToContain('Add the repository variable LANDING_URL')
+        ->assertSuccessful();
 });
 
 it('leaves an existing workflow alone without --force', function (): void {

@@ -177,6 +177,8 @@ final class WorkflowCommand extends Command
     {
         $steps = [];
 
+        $steps[] = 'Add the repository variable LANDING_URL (Settings → Secrets and variables → Actions → Variables) with the landing\'s public URL. The build passes it to Astro as --site, and stops without it.';
+
         if ($target->secrets() !== []) {
             $steps[] = 'Add these repository secrets (Settings → Secrets and variables → Actions): '.implode(', ', $target->secrets()).'.';
         }

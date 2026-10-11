@@ -62,6 +62,13 @@ it('accepts only directories inside the application that Laravel does not use', 
     ['land ing', false],
 ]);
 
+it('passes arguments on to a script the way each package manager needs', function (): void {
+    expect(PackageManager::Npm->runWithArguments('build', '--site "$SITE"'))->toBe('npm run build -- --site "$SITE"')
+        ->and(PackageManager::Pnpm->runWithArguments('build', '--site "$SITE"'))->toBe('pnpm run build --site "$SITE"')
+        ->and(PackageManager::Yarn->runWithArguments('build', '--site "$SITE"'))->toBe('yarn build --site "$SITE"')
+        ->and(PackageManager::Bun->runWithArguments('build', '--site "$SITE"'))->toBe('bun run build --site "$SITE"');
+});
+
 it('reads yarn berry\'s install from the lockfile flag it supports', function (): void {
     expect(PackageManager::Yarn->cleanInstall())->toBe('yarn install --frozen-lockfile')
         ->and(PackageManager::Yarn->cleanInstall(berry: true))->toBe('yarn install --immutable');

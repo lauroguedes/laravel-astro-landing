@@ -126,6 +126,13 @@ rather than making the page fetch client-side.
 It runs only when files under the landing change (or on manual dispatch), installs
 with the landing's lockfile, builds, and deploys `dist/`.
 
+Every workflow needs the repository variable `LANDING_URL` (the landing's public
+URL). The build passes its origin to Astro as `--site`, then fails the deploy if
+`dist/` still contains `https://example.com` or the home page's canonical link is
+on another domain. When a deploy fails there, fix where the template sets its URL;
+never remove the check. Canonical, Open Graph, sitemap and `robots.txt` must be
+built from `Astro.site`, not from hardcoded URLs.
+
 | Target | Secrets |
 |---|---|
 | `cloudflare-pages` | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |

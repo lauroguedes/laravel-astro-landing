@@ -121,6 +121,20 @@ enum PackageManager: string
     }
 
     /**
+     * A script with extra arguments, as a line of shell for a workflow. npm
+     * needs `--` to pass them on; the others pass on whatever follows the
+     * script's name.
+     */
+    public function runWithArguments(string $script, string $arguments): string
+    {
+        return match ($this) {
+            self::Npm => "npm run {$script} -- {$arguments}",
+            self::Yarn => "yarn {$script} {$arguments}",
+            default => "{$this->value} run {$script} {$arguments}",
+        };
+    }
+
+    /**
      * `astro add` with --yes, so it does not stop to ask whether it may edit
      * astro.config.mjs.
      *

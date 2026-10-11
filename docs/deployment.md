@@ -6,11 +6,18 @@ Every target's workflow:
 - runs on a push to the branch (`--branch=`, default `main`) **only when files
   under the landing, or the workflow itself, changed**, and on manual dispatch;
 - installs from the landing's lockfile with its package manager;
-- builds with the landing's `build` script;
+- builds with the landing's `build` script, passing the origin of the
+  `LANDING_URL` repository variable to Astro as `--site`, and stops if the
+  variable is missing;
+- checks the build before deploying it: placeholder URLs or a canonical link on
+  another domain fail the deploy (see [seo.md](seo.md));
 - never cancels a deploy that has started: a newer push waits for it, so the
   site is never left half uploaded.
 
-Add the secrets in **Settings → Secrets and variables → Actions**.
+Every target needs the repository **variable** `LANDING_URL`, the landing's
+public URL (`https://example.com`, or `https://example.com/lp/` under a path).
+Add it, and the target's secrets below, in **Settings → Secrets and variables →
+Actions**.
 
 ## Cloudflare Pages
 
@@ -88,5 +95,6 @@ php artisan vendor:publish --tag=landing-stubs
 
 Edit the files in `stubs/landing/workflows/`. `landing:workflow` reads them in
 preference to the package's own. The placeholders are `{{ name }}`, `{{ path }}`,
-`{{ branch }}`, `{{ workflow_file }}`, `{{ setup }}`, `{{ build }}` and
+`{{ branch }}`, `{{ workflow_file }}`, `{{ setup }}`, `{{ build }}`,
+`{{ build_with_site }}` (the build, with `--site "$SITE"`) and
 `{{ project }}`.

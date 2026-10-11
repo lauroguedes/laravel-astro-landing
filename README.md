@@ -154,6 +154,12 @@ a fresh clone needs nothing beyond the application's own setup. Set
 php artisan landing:workflow cloudflare-pages
 ```
 
+Every workflow needs the repository variable `LANDING_URL`, the landing's
+public URL. The build passes it to Astro as `--site`, so canonical links, Open
+Graph URLs, the sitemap and `robots.txt` point at your domain whatever the
+template's config says, and a build that still points at a placeholder such as
+`https://example.com` is not deployed. See [docs/seo.md](docs/seo.md).
+
 | Target | Repository secrets |
 |---|---|
 | `cloudflare-pages` | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
@@ -227,7 +233,7 @@ reaches the application, and how it deploys.
 
 ## Documentation
 
-[docs/](docs/README.md) covers templates, domains and routes, linking the
+[docs/](docs/README.md) covers templates, domains and routes, SEO, linking the
 landing to the application, and each deploy target.
 
 ## License

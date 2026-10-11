@@ -43,6 +43,7 @@ final readonly class Workflow
             '{{ workflow_file }}' => $file,
             '{{ setup }}' => $manager->setupSteps($path, $berry),
             '{{ build }}' => $build,
+            '{{ build_with_site }}' => $manager->runWithArguments('build', '--site "$SITE"'),
             '{{ project }}' => $project,
         ]);
     }
