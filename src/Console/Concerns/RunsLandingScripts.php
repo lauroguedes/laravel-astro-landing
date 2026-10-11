@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Console\Concerns;
+namespace LauroGuedes\AstroLanding\Console\Concerns;
 
 use Illuminate\Support\Facades\Process;
-use LauroGuedes\AstroOnLaravel\Support\Landing;
+use LauroGuedes\AstroLanding\Support\Landing;
 
 /**
  * Runs a package.json script inside the landing, installing its dependencies

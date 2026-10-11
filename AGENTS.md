@@ -1,4 +1,4 @@
-# lauroguedes/astro-on-laravel — agent guide
+# lauroguedes/laravel-astro-landing — agent guide
 
 A Laravel package (not an application) that puts an Astro landing page inside a
 Laravel application: `landing:install` scaffolds it with create-astro,
@@ -10,7 +10,7 @@ through `Illuminate\Foundation\DevCommands`.
 
 | Path | What |
 |---|---|
-| `src/AstroOnLaravelServiceProvider.php` | Console-only provider: config, publishing, commands, DevCommands registration |
+| `src/AstroLandingServiceProvider.php` | Console-only provider: config, publishing, commands, DevCommands registration |
 | `src/Console/` | The four commands; `Concerns/RunsLandingScripts` runs package.json scripts |
 | `src/Support/Landing.php` | The only reader of `config('landing.*')` |
 | `src/Support/PackageManager.php` | Every npm/pnpm/yarn/bun command, as argument lists |
@@ -43,7 +43,7 @@ vendor/bin/phpstan analyse # level 8
   non-interactive runs take a documented default.
 - Output: `$this->components->twoColumnDetail()` for each file touched, a
   `bulletList()` checklist at the end.
-- Errors the user can act on are `AstroOnLaravelException` subclasses with named
+- Errors the user can act on are `AstroLandingException` subclasses with named
   constructors carrying the full message.
 - Tests fake every process (`fakeProcesses()` in `tests/Pest.php`) and every HTTP
   call (`Http::fake()` + fixtures). Never let a test hit the network or npm.

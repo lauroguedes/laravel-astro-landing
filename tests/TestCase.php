@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Tests;
+namespace LauroGuedes\AstroLanding\Tests;
 
 use Illuminate\Filesystem\Filesystem;
-use LauroGuedes\AstroOnLaravel\AstroOnLaravelServiceProvider;
-use LauroGuedes\AstroOnLaravel\Support\Landing;
+use LauroGuedes\AstroLanding\AstroLandingServiceProvider;
+use LauroGuedes\AstroLanding\Support\Landing;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
@@ -25,7 +25,7 @@ abstract class TestCase extends Orchestra
     {
         parent::setUp();
 
-        $this->root = sys_get_temp_dir().'/astro-on-laravel-'.bin2hex(random_bytes(6));
+        $this->root = sys_get_temp_dir().'/laravel-astro-landing-'.bin2hex(random_bytes(6));
 
         (new Filesystem)->ensureDirectoryExists($this->root);
 
@@ -45,7 +45,7 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
-        return [AstroOnLaravelServiceProvider::class];
+        return [AstroLandingServiceProvider::class];
     }
 
     /**

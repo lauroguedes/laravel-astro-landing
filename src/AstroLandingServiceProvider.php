@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel;
+namespace LauroGuedes\AstroLanding;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\ServiceProvider;
-use LauroGuedes\AstroOnLaravel\Console\BuildCommand;
-use LauroGuedes\AstroOnLaravel\Console\DevCommand;
-use LauroGuedes\AstroOnLaravel\Console\InstallCommand;
-use LauroGuedes\AstroOnLaravel\Console\WorkflowCommand;
-use LauroGuedes\AstroOnLaravel\Support\Landing;
+use LauroGuedes\AstroLanding\Console\BuildCommand;
+use LauroGuedes\AstroLanding\Console\DevCommand;
+use LauroGuedes\AstroLanding\Console\InstallCommand;
+use LauroGuedes\AstroLanding\Console\WorkflowCommand;
+use LauroGuedes\AstroLanding\Support\Landing;
 
 /**
  * Console only. The landing is a static site deployed somewhere else, so there
@@ -19,7 +19,7 @@ use LauroGuedes\AstroOnLaravel\Support\Landing;
  * views, no middleware. Outside the console boot() returns before doing
  * anything at all.
  */
-final class AstroOnLaravelServiceProvider extends ServiceProvider
+final class AstroLandingServiceProvider extends ServiceProvider
 {
     public function register(): void
     {

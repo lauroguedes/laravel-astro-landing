@@ -1,4 +1,4 @@
-## Astro on Laravel
+## Laravel Astro Landing
 
 This application keeps an Astro landing page in its own directory (`config('landing.path')`,
 `landing/` by default). The landing is a **separate static site**: it has its own

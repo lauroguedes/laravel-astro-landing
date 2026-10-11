@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Exceptions;
+namespace LauroGuedes\AstroLanding\Exceptions;
 
 use Throwable;
 
-final class ThemeNotInstallable extends AstroOnLaravelException
+final class ThemeNotInstallable extends AstroLandingException
 {
     public static function unrecognised(string $theme): self
     {

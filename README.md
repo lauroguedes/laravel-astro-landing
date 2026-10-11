@@ -1,7 +1,7 @@
-# Astro on Laravel
+# Laravel Astro Landing
 
-[![Tests](https://github.com/lauroguedes/astro-on-laravel/actions/workflows/tests.yml/badge.svg)](https://github.com/lauroguedes/astro-on-laravel/actions/workflows/tests.yml)
-[![Latest Version](https://img.shields.io/packagist/v/lauroguedes/astro-on-laravel.svg)](https://packagist.org/packages/lauroguedes/astro-on-laravel)
+[![Tests](https://github.com/lauroguedes/laravel-astro-landing/actions/workflows/tests.yml/badge.svg)](https://github.com/lauroguedes/laravel-astro-landing/actions/workflows/tests.yml)
+[![Latest Version](https://img.shields.io/packagist/v/lauroguedes/laravel-astro-landing.svg)](https://packagist.org/packages/lauroguedes/laravel-astro-landing)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE.md)
 
 Keep an [Astro](https://astro.build) landing page in the same repository as your
@@ -27,7 +27,7 @@ This package is the decoupling, set up in one command:
 ## Installation
 
 ```bash
-composer require lauroguedes/astro-on-laravel --dev
+composer require lauroguedes/laravel-astro-landing --dev
 php artisan landing:install
 ```
 
@@ -174,7 +174,7 @@ See [docs/deployment.md](docs/deployment.md) for each target in detail.
 
 If the application uses [Laravel Boost](https://laravel.com/docs/boost), this
 package ships guidelines and an `astro-landing-development` skill. Run
-`php artisan boost:install` and tick `lauroguedes/astro-on-laravel` when it asks
+`php artisan boost:install` and tick `lauroguedes/laravel-astro-landing` when it asks
 which third-party guidelines and skills to install; the choice is saved to
 `boost.json`, so later unattended runs keep it. They tell an agent that the
 landing is a separate static site, which commands build and run it, how it

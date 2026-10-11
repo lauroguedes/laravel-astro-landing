@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Support;
+namespace LauroGuedes\AstroLanding\Support;
 
 /**
  * The four package managers Astro supports, and every command this package

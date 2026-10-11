@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use LauroGuedes\AstroOnLaravel\Support\Landing;
-use LauroGuedes\AstroOnLaravel\Support\PackageManager;
+use LauroGuedes\AstroLanding\Support\Landing;
+use LauroGuedes\AstroLanding\Support\PackageManager;
 
 it('detects the package manager from the first directory with a lockfile', function (): void {
     $this->file('landing/yarn.lock');

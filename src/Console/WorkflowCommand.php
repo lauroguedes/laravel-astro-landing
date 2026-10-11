@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Console;
+namespace LauroGuedes\AstroLanding\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use LauroGuedes\AstroOnLaravel\Support\DeployTarget;
-use LauroGuedes\AstroOnLaravel\Support\Landing;
-use LauroGuedes\AstroOnLaravel\Support\Workflow;
+use LauroGuedes\AstroLanding\Support\DeployTarget;
+use LauroGuedes\AstroLanding\Support\Landing;
+use LauroGuedes\AstroLanding\Support\Workflow;
 
 use function Laravel\Prompts\select;
 

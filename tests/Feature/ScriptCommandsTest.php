@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
-use LauroGuedes\AstroOnLaravel\AstroOnLaravelServiceProvider;
+use LauroGuedes\AstroLanding\AstroLandingServiceProvider;
 
 beforeEach(function (): void {
     fakeProcesses();
@@ -87,7 +87,7 @@ describe('composer run dev', function (): void {
     it('starts the landing alongside the application', function (): void {
         $this->file('landing/package.json', '{}');
 
-        app()->register(AstroOnLaravelServiceProvider::class, force: true);
+        app()->register(AstroLandingServiceProvider::class, force: true);
 
         expect(registeredDevCommands())->toHaveKey('landing', 'php artisan landing:dev');
     });
@@ -99,7 +99,7 @@ describe('composer run dev', function (): void {
 
         config(['landing.dev.enabled' => $enabled]);
 
-        app()->register(AstroOnLaravelServiceProvider::class, force: true);
+        app()->register(AstroLandingServiceProvider::class, force: true);
 
         expect(registeredDevCommands())->not->toHaveKey('landing');
     })->with([

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Exceptions;
+namespace LauroGuedes\AstroLanding\Exceptions;
 
-final class InvalidTemplate extends AstroOnLaravelException
+final class InvalidTemplate extends AstroLandingException
 {
     public static function unrecognised(string $template): self
     {

@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Console;
+namespace LauroGuedes\AstroLanding\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Process;
-use LauroGuedes\AstroOnLaravel\Exceptions\AstroOnLaravelException;
-use LauroGuedes\AstroOnLaravel\Support\DeployTarget;
-use LauroGuedes\AstroOnLaravel\Support\Landing;
-use LauroGuedes\AstroOnLaravel\Support\PackageManager;
-use LauroGuedes\AstroOnLaravel\Support\TemplateResolver;
-use LauroGuedes\AstroOnLaravel\Support\Theme;
-use LauroGuedes\AstroOnLaravel\Support\ThemeCatalog;
+use LauroGuedes\AstroLanding\Exceptions\AstroLandingException;
+use LauroGuedes\AstroLanding\Support\DeployTarget;
+use LauroGuedes\AstroLanding\Support\Landing;
+use LauroGuedes\AstroLanding\Support\PackageManager;
+use LauroGuedes\AstroLanding\Support\TemplateResolver;
+use LauroGuedes\AstroLanding\Support\Theme;
+use LauroGuedes\AstroLanding\Support\ThemeCatalog;
 
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
@@ -86,7 +86,7 @@ final class InstallCommand extends Command
 
         try {
             $template = $this->template($templates, $catalog);
-        } catch (AstroOnLaravelException $exception) {
+        } catch (AstroLandingException $exception) {
             $this->components->error($exception->getMessage());
 
             return self::FAILURE;
@@ -197,7 +197,7 @@ final class InstallCommand extends Command
     }
 
     /**
-     * @throws AstroOnLaravelException
+     * @throws AstroLandingException
      */
     private function template(TemplateResolver $templates, ThemeCatalog $catalog): string
     {
@@ -260,7 +260,7 @@ final class InstallCommand extends Command
      * Only free themes are offered: a paid one has no public repository to
      * install from, and listing it would only lead to an error one step later.
      *
-     * @throws AstroOnLaravelException
+     * @throws AstroLandingException
      */
     private function theme(ThemeCatalog $catalog): string
     {
@@ -307,7 +307,7 @@ final class InstallCommand extends Command
     }
 
     /**
-     * @throws AstroOnLaravelException
+     * @throws AstroLandingException
      */
     private function resolve(TemplateResolver $templates, string $input): string
     {

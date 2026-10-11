@@ -1,5 +1,5 @@
 {
-    "name": "lauroguedes/astro-on-laravel",
+    "name": "lauroguedes/laravel-astro-landing",
     "description": "Keep an Astro landing page in the same repository as your Laravel application, scaffold it with one command, run it alongside `composer run dev`, and deploy it on its own.",
     "keywords": [
         "laravel",
@@ -9,13 +9,13 @@
         "marketing-site",
         "github-actions"
     ],
-    "homepage": "https://github.com/lauroguedes/astro-on-laravel",
+    "homepage": "https://github.com/lauroguedes/laravel-astro-landing",
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/lauroguedes/astro-on-laravel/issues",
-        "source": "https://github.com/lauroguedes/astro-on-laravel",
-        "docs": "https://github.com/lauroguedes/astro-on-laravel/blob/main/docs/README.md",
-        "security": "https://github.com/lauroguedes/astro-on-laravel/security/policy"
+        "issues": "https://github.com/lauroguedes/laravel-astro-landing/issues",
+        "source": "https://github.com/lauroguedes/laravel-astro-landing",
+        "docs": "https://github.com/lauroguedes/laravel-astro-landing/blob/main/docs/README.md",
+        "security": "https://github.com/lauroguedes/laravel-astro-landing/security/policy"
     },
     "funding": [
         {
@@ -54,12 +54,12 @@
     },
     "autoload": {
         "psr-4": {
-            "LauroGuedes\\AstroOnLaravel\\": "src/"
+            "LauroGuedes\\AstroLanding\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "LauroGuedes\\AstroOnLaravel\\Tests\\": "tests/"
+            "LauroGuedes\\AstroLanding\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -94,7 +94,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "LauroGuedes\\AstroOnLaravel\\AstroOnLaravelServiceProvider"
+                "LauroGuedes\\AstroLanding\\AstroLandingServiceProvider"
             ]
         }
     },

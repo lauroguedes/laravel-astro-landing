@@ -8,9 +8,9 @@ declare(strict_types=1);
  */
 
 use Illuminate\Filesystem\Filesystem;
-use LauroGuedes\AstroOnLaravel\Support\DeployTarget;
-use LauroGuedes\AstroOnLaravel\Support\PackageManager;
-use LauroGuedes\AstroOnLaravel\Support\Workflow;
+use LauroGuedes\AstroLanding\Support\DeployTarget;
+use LauroGuedes\AstroLanding\Support\PackageManager;
+use LauroGuedes\AstroLanding\Support\Workflow;
 
 require __DIR__.'/../vendor/autoload.php';
 

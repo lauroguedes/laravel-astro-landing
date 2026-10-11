@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Support;
+namespace LauroGuedes\AstroLanding\Support;
 
-use LauroGuedes\AstroOnLaravel\Exceptions\InvalidTemplate;
-use LauroGuedes\AstroOnLaravel\Exceptions\ThemeNotInstallable;
+use LauroGuedes\AstroLanding\Exceptions\InvalidTemplate;
+use LauroGuedes\AstroLanding\Exceptions\ThemeNotInstallable;
 
 /**
  * Turns whatever somebody typed into the value create-astro's --template takes.

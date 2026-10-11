@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
-use LauroGuedes\AstroOnLaravel\Exceptions\InvalidTemplate;
-use LauroGuedes\AstroOnLaravel\Exceptions\ThemeNotInstallable;
-use LauroGuedes\AstroOnLaravel\Support\TemplateResolver;
-use LauroGuedes\AstroOnLaravel\Support\Theme;
-use LauroGuedes\AstroOnLaravel\Support\ThemeCatalog;
+use LauroGuedes\AstroLanding\Exceptions\InvalidTemplate;
+use LauroGuedes\AstroLanding\Exceptions\ThemeNotInstallable;
+use LauroGuedes\AstroLanding\Support\TemplateResolver;
+use LauroGuedes\AstroLanding\Support\Theme;
+use LauroGuedes\AstroLanding\Support\ThemeCatalog;
 
 beforeEach(function (): void {
     Http::preventStrayRequests();

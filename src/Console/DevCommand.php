@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Console;
+namespace LauroGuedes\AstroLanding\Console;
 
 use Illuminate\Console\Command;
-use LauroGuedes\AstroOnLaravel\Console\Concerns\RunsLandingScripts;
-use LauroGuedes\AstroOnLaravel\Support\Landing;
+use LauroGuedes\AstroLanding\Console\Concerns\RunsLandingScripts;
+use LauroGuedes\AstroLanding\Support\Landing;
 
 /**
  * The Astro dev server, from the application root.

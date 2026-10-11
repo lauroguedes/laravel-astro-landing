@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
-use LauroGuedes\AstroOnLaravel\Tests\TestCase;
+use LauroGuedes\AstroLanding\Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Unit', 'Feature', 'Arch');
 

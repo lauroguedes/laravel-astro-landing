@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Support;
+namespace LauroGuedes\AstroLanding\Support;
 
 /**
  * Where a landing can be deployed by the generated GitHub Actions workflow.

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Support;
+namespace LauroGuedes\AstroLanding\Support;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory as Http;
-use LauroGuedes\AstroOnLaravel\Exceptions\ThemeNotInstallable;
+use LauroGuedes\AstroLanding\Exceptions\ThemeNotInstallable;
 
 /**
  * Reads the themes catalog at astro.build/themes.

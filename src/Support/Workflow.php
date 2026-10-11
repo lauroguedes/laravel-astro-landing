@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LauroGuedes\AstroOnLaravel\Support;
+namespace LauroGuedes\AstroLanding\Support;
 
 use Illuminate\Filesystem\Filesystem;
 

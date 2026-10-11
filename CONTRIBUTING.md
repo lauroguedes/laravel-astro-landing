@@ -16,8 +16,8 @@ real thing end to end in a fresh application:
 
 ```bash
 laravel new demo && cd demo
-composer config repositories.astro path ../astro-on-laravel
-composer require lauroguedes/astro-on-laravel:@dev --dev
+composer config repositories.astro path ../laravel-astro-landing
+composer require lauroguedes/laravel-astro-landing:@dev --dev
 php artisan landing:install
 php artisan landing:build
 ```
