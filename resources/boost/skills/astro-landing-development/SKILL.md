@@ -1,6 +1,6 @@
 ---
 name: astro-landing-development
-description: Build, configure and deploy the Astro landing page that lives inside this Laravel application (lauroguedes/laravel-astro-landing) — installing it from a template or theme, running it with composer run dev, sharing data with the Laravel app, and deploying it on its own with GitHub Actions.
+description: Build, configure and deploy the Astro landing page that lives inside this Laravel application (lauroguedes/laravel-astro-landing): installing it from a template or theme, running it with composer run dev, sharing data with the Laravel app, and deploying it on its own with GitHub Actions.
 ---
 
 # Astro landing development
@@ -20,7 +20,7 @@ same build the deploy workflow runs, so a page that builds here builds there.
 |---|---|
 | The Astro project | `config('landing.path')`, default `landing/` |
 | Its config | `landing/astro.config.mjs` (or `.ts`) |
-| Pages | `landing/src/pages/*.astro` — one file per route |
+| Pages | `landing/src/pages/*.astro`, one file per route |
 | Static files | `landing/public/` |
 | Build output | `landing/dist/` (git-ignored) |
 | Deploy workflow | `.github/workflows/deploy-landing*.yml` |
@@ -39,7 +39,7 @@ and where it deploys. Every question has a flag:
 |---|---|
 | `--path=` | a directory in the application root, default `landing` |
 | `--template=` | `empty`, an Astro example (`basics`, `blog`, `portfolio`, `starlight`, `with-tailwindcss`, …), `owner/repo`, `owner/repo/sub/dir#branch`, a GitHub/GitLab/Bitbucket URL, `gitlab:owner/repo`, or `theme:<slug>` from astro.build/themes |
-| `--pm=` | `npm`, `pnpm`, `yarn`, `bun` — defaults to the application's |
+| `--pm=` | `npm`, `pnpm`, `yarn`, `bun`; defaults to the application's |
 | `--add=` | an integration for `astro add`, repeatable |
 | `--deploy=` | `cloudflare-pages`, `netlify`, `vercel`, `github-pages`, `ssh`, `none` |
 | `--skip-install` | scaffold without installing dependencies |
@@ -78,7 +78,7 @@ import { PUBLIC_APP_URL } from 'astro:env/client';
 <a href={`${PUBLIC_APP_URL}/register`}>Get started</a>
 ```
 
-Data that changes — prices, plans, counts — comes from a public, unauthenticated
+Data that changes (prices, plans, counts) comes from a public, unauthenticated
 Laravel endpoint fetched **at build time** in the page frontmatter. No CORS setup is
 needed for a build-time fetch. Keep a fallback for when the API cannot be reached,
 or the deploy fails whenever the application is down.
@@ -109,8 +109,8 @@ with the landing's lockfile, builds, and deploys `dist/`.
 | `cloudflare-pages` | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
 | `netlify` | `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID` |
 | `vercel` | `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` |
-| `github-pages` | none — set Pages' source to GitHub Actions |
-| `ssh` | `LANDING_SSH_HOST`, `LANDING_SSH_USER`, `LANDING_SSH_KEY`, `LANDING_SSH_PATH`, optional `LANDING_SSH_PORT` |
+| `github-pages` | none; set Pages' source to GitHub Actions |
+| `ssh` | `LANDING_SSH_HOST`, `LANDING_SSH_USER`, `LANDING_SSH_KEY`, `LANDING_SSH_PATH`; optional `LANDING_SSH_PORT`, `LANDING_SSH_KNOWN_HOSTS` (pins the host key) |
 
 To deploy to two places, write a second file:
 `php artisan landing:workflow ssh --file=deploy-landing-mirror`.
@@ -122,14 +122,14 @@ To change what every generated workflow looks like, publish the stubs and edit t
 
 `config/landing.php`:
 
-- `path` (`LANDING_PATH`) — where the landing is.
-- `package_manager` (`LANDING_PACKAGE_MANAGER`) — forces one; otherwise the landing's lockfile decides.
-- `dev.enabled` (`LANDING_DEV`) — whether `composer run dev` starts the landing (Laravel 13+).
-- `dev.name` — the process name shown by `php artisan dev`.
+- `path` (`LANDING_PATH`): where the landing is.
+- `package_manager` (`LANDING_PACKAGE_MANAGER`): forces one; otherwise the landing's lockfile decides.
+- `dev.enabled` (`LANDING_DEV`): whether `composer run dev` starts the landing (Laravel 13.16+).
+- `dev.name`: the process name shown by `php artisan dev`.
 
 ## Common mistakes
 
-- Running `npm install` in the application root and expecting the landing to work —
+- Running `npm install` in the application root and expecting the landing to work:
   the landing has its own `node_modules`. `landing:dev` and `landing:build` install
   them when they are missing.
 - Using Laravel's `@vite` assets, Blade components or `route()` in the landing. It is

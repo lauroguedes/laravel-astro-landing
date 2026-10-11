@@ -226,7 +226,7 @@ it('asks for everything it was not told', function (): void {
     $this->artisan('landing:install')
         ->expectsQuestion('Where should the landing live?', 'site')
         ->expectsChoice('What should the landing start from?', 'theme', [
-            'empty' => 'An empty project — Astro\'s minimal template',
+            'empty' => 'An empty project: Astro\'s minimal template',
             'example' => 'An official Astro example',
             'repository' => 'A template repository on GitHub, GitLab or Bitbucket',
             'theme' => 'A free theme from astro.build/themes',
@@ -244,7 +244,7 @@ it('asks for everything it was not told', function (): void {
             'vercel' => 'Vercel',
             'github-pages' => 'GitHub Pages',
             'ssh' => 'Your own server, over SSH and rsync',
-            'none' => 'Nowhere yet — no workflow',
+            'none' => 'Nowhere yet, no workflow',
         ])
         ->assertSuccessful();
 
@@ -260,4 +260,37 @@ it('says when an existing config will not find the new landing', function (): vo
         ->expectsOutputToContain('config/landing.php points at landing/. Set LANDING_PATH=site')
         ->expectsOutputToContain('until the config points at it')
         ->assertSuccessful();
+});
+
+it('drops the template author\'s lockfile when another package manager was chosen', function (): void {
+    fakeProcesses(templateFiles: ['bun.lock', 'package-lock.json']);
+
+    landingInstall(['--pm' => 'npm'])->assertSuccessful();
+
+    expect($this->root.'/landing/bun.lock')->not->toBeFile()
+        ->and($this->root.'/landing/package-lock.json')->toBeFile();
+});
+
+it('pins the package manager when there is no lockfile to say which one it is', function (): void {
+    $this->file('package-lock.json');
+
+    landingInstall(['--pm' => 'bun', '--skip-install' => true])->assertSuccessful();
+
+    expect(file_get_contents($this->root.'/config/landing.php'))
+        ->toContain("env('LANDING_PACKAGE_MANAGER', 'bun')");
+});
+
+it('does not pin the package manager the lockfiles already name', function (): void {
+    $this->file('package-lock.json');
+
+    landingInstall(['--pm' => 'npm', '--skip-install' => true])->assertSuccessful();
+
+    expect(file_get_contents($this->root.'/config/landing.php'))
+        ->toContain("env('LANDING_PACKAGE_MANAGER')");
+});
+
+it('rejects a branch name before creating anything', function (): void {
+    landingInstall(['--deploy' => 'netlify', '--branch' => '--upload-pack=x'])->assertFailed();
+
+    Process::assertNothingRan();
 });

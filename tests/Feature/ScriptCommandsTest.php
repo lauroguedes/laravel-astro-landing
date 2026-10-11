@@ -67,7 +67,7 @@ it('says so when there is no landing', function (): void {
 describe('composer run dev', function (): void {
     beforeEach(function (): void {
         if (! class_exists(DevCommands::class)) {
-            $this->markTestSkipped('DevCommands arrived in Laravel 13.');
+            $this->markTestSkipped('DevCommands arrived in Laravel 13.16.');
         }
 
         $reset = static function (): void {

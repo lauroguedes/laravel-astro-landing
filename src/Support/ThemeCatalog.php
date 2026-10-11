@@ -15,7 +15,7 @@ use LauroGuedes\AstroLanding\Exceptions\ThemeNotInstallable;
  * Two things are taken from it and nothing else: the cards a search returns,
  * and the primary button on a theme's own page, which for a free theme links
  * its repository. Both are looked for narrowly, and anything that does not
- * match is reported as "not installable from here" rather than guessed at — a
+ * match is reported as "not installable from here" rather than guessed at: a
  * wrong guess would download somebody else's code into the project.
  */
 final readonly class ThemeCatalog

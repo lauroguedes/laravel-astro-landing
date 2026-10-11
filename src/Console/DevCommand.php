@@ -11,7 +11,7 @@ use LauroGuedes\AstroLanding\Support\Landing;
 /**
  * The Astro dev server, from the application root.
  *
- * On Laravel 13 this is also what `composer run dev` starts for the landing,
+ * On Laravel 13.16+ this is also what `composer run dev` starts for the landing,
  * registered with DevCommands by the service provider.
  */
 final class DevCommand extends Command

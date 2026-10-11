@@ -53,6 +53,6 @@ When that data changes, redeploy the landing: the generated workflow accepts
 ## Sharing a design
 
 The two projects can share design tokens, but not by importing each other's
-files — they are built by different tools and one of them is not deployed with
+files: they are built by different tools and one of them is not deployed with
 the other. Copy the tokens into the landing's CSS, or publish them as a package
 both depend on.

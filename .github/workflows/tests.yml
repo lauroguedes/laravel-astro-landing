@@ -26,10 +26,10 @@ jobs:
           - php: '8.5'
             stability: prefer-lowest
 
-    name: PHP ${{ matrix.php }} — Laravel ${{ matrix.laravel }} — ${{ matrix.stability }}
+    name: PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}, ${{ matrix.stability }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

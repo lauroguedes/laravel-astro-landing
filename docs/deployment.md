@@ -7,7 +7,8 @@ Every target's workflow:
   under the landing, or the workflow itself, changed**, and on manual dispatch;
 - installs from the landing's lockfile with its package manager;
 - builds with the landing's `build` script;
-- cancels an older run of the same workflow when a newer one starts.
+- never cancels a deploy that has started: a newer push waits for it, so the
+  site is never left half uploaded.
 
 Add the secrets in **Settings → Secrets and variables → Actions**.
 
@@ -25,12 +26,17 @@ another.
 
 Secrets: `NETLIFY_AUTH_TOKEN` (a personal access token), `NETLIFY_SITE_ID`
 (Site configuration → Site details). Create the site once without connecting a
-repository — the workflow deploys the built files, Netlify does not build.
+repository. The workflow deploys the built files; Netlify does not build.
 
 ## Vercel
 
 Secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Run `npx vercel link`
 in the landing directory once; the two IDs are in `.vercel/project.json`.
+
+The workflow builds the landing itself and uploads `dist/` through Vercel's
+[Build Output API](https://vercel.com/docs/build-output-api) with
+`vercel deploy --prebuilt`, so Vercel serves the files as they are and the
+project's framework and build settings do not matter.
 
 ## GitHub Pages
 
@@ -41,7 +47,13 @@ page (`user.github.io/repo`) set `base: '/repo'` in `astro.config.mjs`.
 
 Secrets: `LANDING_SSH_HOST`, `LANDING_SSH_USER`, `LANDING_SSH_KEY` (a private key
 whose public half is in that user's `authorized_keys`), `LANDING_SSH_PATH` (the
-directory the web server serves). `LANDING_SSH_PORT` is optional.
+directory the web server serves). Optional: `LANDING_SSH_PORT` (default 22) and
+`LANDING_SSH_KNOWN_HOSTS`.
+
+Without `LANDING_SSH_KNOWN_HOSTS` the workflow reads the server's host key with
+`ssh-keyscan` on every run, which trusts whatever answers at that address. Set it
+to the server's line from a `known_hosts` file you trust
+(`ssh-keyscan -H your.server` run once, from a network you trust) to pin it.
 
 The workflow `rsync`s `dist/` with `--delete`, so `LANDING_SSH_PATH` must be a
 directory that holds nothing but the landing. On Laravel Forge, create a static

@@ -12,15 +12,16 @@ pest()->extend(TestCase::class)->in('Unit', 'Feature', 'Arch');
  * Fakes every external process the way the real ones would leave the disk.
  *
  * create-astro is what makes package.json exist, and the installer checks for
- * it afterwards — so a fake that only returned success would describe a run in
+ * it afterwards, so a fake that only returned success would describe a run in
  * which create-astro reported success and wrote nothing, which the installer
  * correctly treats as a failure. This writes what create-astro would have.
  *
  * @param  array<string, int>  $exitCodes  keyed by a fragment of the command
+ * @param  list<string>  $templateFiles  extra files the template ships, such as its author's lockfile
  */
-function fakeProcesses(array $exitCodes = []): void
+function fakeProcesses(array $exitCodes = [], array $templateFiles = []): void
 {
-    Process::fake(function (PendingProcess $process) use ($exitCodes) {
+    Process::fake(function (PendingProcess $process) use ($exitCodes, $templateFiles) {
         $command = commandLine($process);
 
         foreach ($exitCodes as $fragment => $code) {
@@ -37,6 +38,10 @@ function fakeProcesses(array $exitCodes = []): void
             $absolute = $process->path.'/'.$directory;
             @mkdir($absolute, recursive: true);
             file_put_contents($absolute.'/package.json', '{"name":"landing","scripts":{"dev":"astro dev","build":"astro build"}}');
+
+            foreach ($templateFiles as $file) {
+                file_put_contents($absolute.'/'.$file, '');
+            }
         }
 
         return Process::result(output: 'ok');

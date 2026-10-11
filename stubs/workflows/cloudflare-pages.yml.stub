@@ -13,9 +13,11 @@ on:
       - '.github/workflows/{{ workflow_file }}'
   workflow_dispatch:
 
+# A newer push waits for the running deploy instead of cancelling it: a
+# deploy stopped halfway can leave the site with half its files.
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -25,7 +27,7 @@ jobs:
         working-directory: {{ path }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
 {{ setup }}
 
@@ -37,7 +39,7 @@ jobs:
         run: {{ build }}
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

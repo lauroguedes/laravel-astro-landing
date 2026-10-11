@@ -46,10 +46,19 @@ final class WorkflowCommand extends Command
         }
 
         $branch = $this->option('branch');
-        $branch = is_string($branch) ? trim($branch) : 'main';
 
-        if (preg_match('#^[A-Za-z0-9._/\-]+$#', $branch) !== 1) {
-            $this->components->error(sprintf('"%s" is not a branch name.', $branch));
+        if (! self::isBranchName($branch)) {
+            $this->components->error(sprintf('"%s" is not a branch name.', is_string($branch) ? $branch : ''));
+
+            return self::FAILURE;
+        }
+
+        /*
+         * The path goes into the YAML unquoted. landing:install only ever
+         * writes a valid one, but LANDING_PATH can say anything.
+         */
+        if (! Landing::isValidPath($landing->path())) {
+            $this->components->error(sprintf('The landing path "%s" is not a directory inside the application. Check LANDING_PATH.', $landing->path()));
 
             return self::FAILURE;
         }
@@ -57,7 +66,7 @@ final class WorkflowCommand extends Command
         $destination = $landing->basePath('.github/workflows/'.$file);
 
         if ($files->exists($destination) && $this->option('force') !== true) {
-            $this->components->twoColumnDetail('.github/workflows/'.$file, '<fg=yellow>already exists, left alone — --force replaces it</>');
+            $this->components->twoColumnDetail('.github/workflows/'.$file, '<fg=yellow>already exists, left alone (--force replaces it)</>');
 
             return self::SUCCESS;
         }
@@ -79,6 +88,21 @@ final class WorkflowCommand extends Command
         $this->components->bulletList($this->checklist($target, $landing->path()));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Characters git allows in a branch name that also need no quoting in
+     * YAML. Shared with landing:install, which checks before it creates
+     * anything.
+     *
+     * @phpstan-assert-if-true =string $branch
+     */
+    public static function isBranchName(mixed $branch): bool
+    {
+        return is_string($branch)
+            && preg_match('#^[A-Za-z0-9._/\-]+$#', $branch) === 1
+            && ! str_starts_with($branch, '-')
+            && ! str_contains($branch, '..');
     }
 
     private function target(): ?DeployTarget

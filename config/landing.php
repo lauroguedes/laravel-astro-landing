@@ -35,7 +35,7 @@ return [
     | composer run dev
     |--------------------------------------------------------------------------
     |
-    | On Laravel 13, `php artisan dev` (which `composer run dev` calls) runs
+    | On Laravel 13.16 and later, `php artisan dev` (which `composer run dev` calls) runs
     | every process registered with Illuminate\Foundation\DevCommands. When
     | this is on and the landing exists, the Astro dev server is one of them,
     | under the name below. Turn it off to run `php artisan landing:dev` by

@@ -7,7 +7,7 @@ namespace LauroGuedes\AstroLanding\Support;
 use Illuminate\Contracts\Config\Repository;
 
 /**
- * Where the landing is and what installs it — the one place that reads the
+ * Where the landing is and what installs it: the one place that reads the
  * landing config, so every command agrees on both.
  */
 final readonly class Landing

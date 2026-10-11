@@ -48,8 +48,8 @@ trait RunsLandingScripts
     }
 
     /**
-     * Started rather than run, so a SIGINT or SIGTERM sent to artisan — which
-     * is how `php artisan dev` stops its processes — reaches the dev server
+     * Started rather than run, so a SIGINT or SIGTERM sent to artisan (which
+     * is how `php artisan dev` stops its processes) reaches the dev server
      * too, instead of leaving it holding its port.
      *
      * @param  list<string>  $command
@@ -63,8 +63,16 @@ trait RunsLandingScripts
                 $this->output->write($output);
             });
 
+        /*
+         * A fresh clone runs two processes here, the install and then the
+         * server, and each registers a handler. The install's has nothing to
+         * signal by then, and Symfony throws on signalling a process that has
+         * exited, so each handler checks first.
+         */
         $this->trap([self::SIGINT, self::SIGTERM], static function (int $signal) use ($process): void {
-            $process->signal($signal);
+            if ($process->running()) {
+                $process->signal($signal);
+            }
         });
 
         return $process->wait()->exitCode() ?? self::FAILURE;

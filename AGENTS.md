@@ -1,9 +1,9 @@
-# lauroguedes/laravel-astro-landing — agent guide
+# lauroguedes/laravel-astro-landing: agent guide
 
 A Laravel package (not an application) that puts an Astro landing page inside a
 Laravel application: `landing:install` scaffolds it with create-astro,
 `landing:workflow` writes a GitHub Actions deploy workflow, `landing:dev` and
-`landing:build` run it, and on Laravel 13 the landing joins `composer run dev`
+`landing:build` run it, and on Laravel 13.16+ the landing joins `composer run dev`
 through `Illuminate\Foundation\DevCommands`.
 
 ## Layout
@@ -34,7 +34,7 @@ vendor/bin/phpstan analyse # level 8
 ## Conventions
 
 - PHP 8.3 is the floor: no `new Foo()->bar()` without parentheses, no 8.4-only
-  functions. Laravel 12 and 13 are both supported; guard Laravel 13-only APIs
+  functions. Laravel 12 and 13 are both supported; guard newer framework APIs
   with `class_exists()` (see `DevCommands`).
 - `declare(strict_types=1)` everywhere; classes are `final` unless there is a reason.
 - Processes: `Illuminate\Support\Facades\Process` with array commands only. Never

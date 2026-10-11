@@ -27,7 +27,7 @@ final class ThemeNotInstallable extends AstroLandingException
     public static function notOpenSource(string $theme, string $link): self
     {
         return new self(sprintf(
-            '"%s" is not published as a public repository, so it cannot be installed from here — it is probably a paid theme. Get it from %s, then install it with --template=<owner>/<repository>.',
+            '"%s" is not published as a public repository, so it cannot be installed from here. It is probably a paid theme. Get it from %s, then install it with --template=<owner>/<repository>.',
             $theme,
             $link,
         ));

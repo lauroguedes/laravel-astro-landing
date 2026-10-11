@@ -24,16 +24,16 @@ use function Laravel\Prompts\text;
 /**
  * Puts an Astro landing next to the Laravel application, in one command.
  *
- * The landing is a separate project in a subdirectory — its own package.json,
- * its own lockfile, its own build — so it can be deployed somewhere the
+ * The landing is a separate project in a subdirectory, with its own package.json,
+ * its own lockfile and its own build, so it can be deployed somewhere the
  * application is not, on a schedule the application does not set. Everything
  * this command does beyond running create-astro is about keeping the two from
  * stepping on each other: the landing's build output stays out of git, its
  * markup stays out of the application's Tailwind build, and its deploy only
  * fires when the landing changed.
  *
- * It asks what cannot be inferred — where the landing lives, what it starts
- * from, which package manager, where it deploys — and every question has a flag,
+ * It asks what cannot be inferred (where the landing lives, what it starts
+ * from, which package manager, where it deploys), and every question has a flag,
  * so a script can answer all of them. A run with nobody at the keyboard takes
  * landing/, the empty template, the application's package manager, and no
  * deploy workflow.
@@ -76,7 +76,7 @@ final class InstallCommand extends Command
     {
         /*
          * Every question before anything is written or downloaded, so a wrong
-         * answer — or a theme that turns out to be paid — costs nothing.
+         * answer, or a theme that turns out to be paid, costs nothing.
          */
         $path = $this->landingPath($files, $landing);
 
@@ -110,6 +110,14 @@ final class InstallCommand extends Command
             return self::FAILURE;
         }
 
+        $branch = $this->option('branch');
+
+        if ($target instanceof DeployTarget && ! WorkflowCommand::isBranchName($branch)) {
+            $this->components->error(sprintf('"%s" is not a branch name.', is_string($branch) ? $branch : ''));
+
+            return self::FAILURE;
+        }
+
         $this->newLine();
         $this->components->info(sprintf('Creating the landing in %s/ from "%s" with %s.', $path, $template, $manager->value));
 
@@ -117,25 +125,38 @@ final class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        if ($this->option('skip-install') !== true && ! $this->installDependencies($landing, $manager, $path, $integrations)) {
+        $this->dropForeignLockfiles($files, $landing->absolutePath($path), $manager);
+
+        $skipInstall = $this->option('skip-install') === true;
+
+        if (! $skipInstall && ! $this->installDependencies($landing, $manager, $path, $integrations)) {
             return self::FAILURE;
         }
 
         $configuredPath = $landing->path();
+
+        /*
+         * Without an install there is no lockfile in the landing yet, so every
+         * later command would fall back to the application's package manager.
+         * Pinning it in the config is what keeps them on the one chosen here.
+         */
+        $pin = $skipInstall && (PackageManager::detect($landing->absolutePath($path), $landing->basePath()) ?? PackageManager::Npm) !== $manager
+            ? $manager
+            : null;
 
         config([
             'landing.path' => $path,
             'landing.package_manager' => $manager->value,
         ]);
 
-        $configured = $this->publishConfig($files, $landing, $path, $configuredPath);
+        $configured = $this->publishConfig($files, $landing, $path, $configuredPath, $pin);
         $this->ignoreBuildOutput($files, $landing, $path);
         $this->keepOutOfTailwind($files, $landing, $path);
 
         if ($target instanceof DeployTarget) {
             $this->call('landing:workflow', array_filter([
                 'target' => $target->value,
-                '--branch' => $this->option('branch'),
+                '--branch' => $branch,
                 '--force' => $this->option('force') === true ? true : null,
             ], static fn (mixed $value): bool => $value !== null));
         }
@@ -185,11 +206,7 @@ final class InstallCommand extends Command
 
         $absolute = $landing->absolutePath(Landing::normalise($path));
 
-        if ($files->isDirectory($absolute) && $files->files($absolute, hidden: true) !== []) {
-            return sprintf('%s/ already exists and is not empty.', Landing::normalise($path));
-        }
-
-        if ($files->isDirectory($absolute) && $files->directories($absolute) !== []) {
+        if ($files->isDirectory($absolute) && ! $files->isEmptyDirectory($absolute)) {
             return sprintf('%s/ already exists and is not empty.', Landing::normalise($path));
         }
 
@@ -214,7 +231,7 @@ final class InstallCommand extends Command
         $source = select(
             label: 'What should the landing start from?',
             options: [
-                'empty' => 'An empty project — Astro\'s minimal template',
+                'empty' => 'An empty project: Astro\'s minimal template',
                 'example' => 'An official Astro example',
                 'repository' => 'A template repository on GitHub, GitLab or Bitbucket',
                 'theme' => 'A free theme from astro.build/themes',
@@ -267,7 +284,7 @@ final class InstallCommand extends Command
         while (true) {
             $query = text(
                 label: 'Search the Astro themes catalog',
-                placeholder: 'saas, startup, product — or leave empty to browse landing pages',
+                placeholder: 'saas, startup, product, or leave empty to browse landing pages',
                 hint: 'A theme slug or an astro.build/themes/details/ URL works too.',
             );
 
@@ -397,7 +414,7 @@ final class InstallCommand extends Command
 
             $given = (string) select(
                 label: 'Where will the landing be deployed?',
-                options: [...DeployTarget::options(), 'none' => 'Nowhere yet — no workflow'],
+                options: [...DeployTarget::options(), 'none' => 'Nowhere yet, no workflow'],
                 default: 'none',
                 hint: 'Writes a GitHub Actions workflow that deploys only when the landing changes.',
             );
@@ -423,7 +440,7 @@ final class InstallCommand extends Command
      * child process with no TTY is a hang, not a question.
      *
      * --no-install because the install is done here, with the package manager
-     * that was chosen — create-astro would use whichever one launched it.
+     * that was chosen; create-astro would use whichever one launched it.
      * --no-git because the landing lives inside the application's repository.
      */
     private function scaffold(Landing $landing, PackageManager $manager, string $path, string $template): bool
@@ -453,6 +470,26 @@ final class InstallCommand extends Command
         $this->components->twoColumnDetail('Astro project', '<fg=green>'.$path.'/</>');
 
         return true;
+    }
+
+    /**
+     * Templates often ship the lockfile of whoever wrote them. Left next to the
+     * one the chosen package manager writes, it wins the lockfile lookup, so
+     * landing:dev and the deploy workflow would use the template author's
+     * package manager instead of this one, against a stale lockfile.
+     *
+     * Only ever in a directory create-astro has just filled, which was empty
+     * before this command ran.
+     */
+    private function dropForeignLockfiles(Filesystem $files, string $directory, PackageManager $manager): void
+    {
+        foreach ($manager->foreignLockfiles() as $lockfile) {
+            if ($files->exists($directory.'/'.$lockfile)) {
+                $files->delete($directory.'/'.$lockfile);
+
+                $this->components->twoColumnDetail($lockfile, '<fg=yellow>removed, the template\'s; '.$manager->value.' writes its own</>');
+            }
+        }
     }
 
     /**
@@ -498,12 +535,16 @@ final class InstallCommand extends Command
      *
      * Returns whether the config, as it now stands, finds this landing.
      */
-    private function publishConfig(Filesystem $files, Landing $landing, string $path, string $configuredPath): bool
+    private function publishConfig(Filesystem $files, Landing $landing, string $path, string $configuredPath, ?PackageManager $pin): bool
     {
         $destination = $landing->basePath('config/landing.php');
 
         if ($files->exists($destination) && $this->option('force') !== true) {
             $this->components->twoColumnDetail('config/landing.php', '<fg=yellow>already exists, left alone</>');
+
+            if ($pin instanceof PackageManager) {
+                $this->components->warn(sprintf('Set LANDING_PACKAGE_MANAGER=%s until the landing has a lockfile, or later commands will use another package manager.', $pin->value));
+            }
 
             if ($configuredPath !== $path) {
                 $this->components->warn(sprintf('config/landing.php points at %s/. Set LANDING_PATH=%s, or update it, for landing:dev and composer run dev to find this one.', $configuredPath, $path));
@@ -517,11 +558,12 @@ final class InstallCommand extends Command
         $config = (string) $files->get(dirname(__DIR__, 2).'/config/landing.php');
 
         $files->ensureDirectoryExists(dirname($destination));
-        $files->put($destination, str_replace(
-            "env('LANDING_PATH', 'landing')",
-            sprintf("env('LANDING_PATH', '%s')", $path),
-            $config,
-        ));
+        $files->put($destination, strtr($config, [
+            "env('LANDING_PATH', 'landing')" => sprintf("env('LANDING_PATH', '%s')", $path),
+            "env('LANDING_PACKAGE_MANAGER')" => $pin instanceof PackageManager
+                ? sprintf("env('LANDING_PACKAGE_MANAGER', '%s')", $pin->value)
+                : "env('LANDING_PACKAGE_MANAGER')",
+        ]));
 
         $this->components->twoColumnDetail('config/landing.php', '<fg=green>published</>');
 
@@ -558,7 +600,7 @@ final class InstallCommand extends Command
 
     /**
      * Tailwind v4 finds its sources by scanning the project, and the landing is
-     * inside the project — so without this, every class the landing uses ends up
+     * inside the project, so without this, every class the landing uses ends up
      * in the application's stylesheet as well.
      */
     private function keepOutOfTailwind(Filesystem $files, Landing $landing, string $path): void
@@ -606,7 +648,7 @@ final class InstallCommand extends Command
                 : (class_exists(DevCommands::class)
                 ? sprintf('`composer run dev` now starts the landing as well, at http://localhost:4321. On its own: `php artisan landing:dev`, or `%s` in %s/.', $run, $path)
                 : sprintf('Start it with `php artisan landing:dev`, or `%s` in %s/.', $run, $path)),
-            sprintf('Set `site` in %s/astro.config.mjs to the landing\'s public URL — canonical links and the sitemap are built from it.', $path),
+            sprintf('Set `site` in %s/astro.config.mjs to the landing\'s public URL. Canonical links and the sitemap are built from it.', $path),
         ];
 
         if ($this->option('skip-install') === true) {

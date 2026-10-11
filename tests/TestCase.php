@@ -14,8 +14,8 @@ abstract class TestCase extends Orchestra
     /**
      * Every test gets an empty application root of its own.
      *
-     * The installer writes into the root — config/, .gitignore, .github/, the
-     * landing itself — and testbench's skeleton is shared by every test in the
+     * The installer writes into the root (config/, .gitignore, .github/, the
+     * landing itself), and testbench's skeleton is shared by every test in the
      * process and outlives it. A file left there by one test changes what the
      * next one sees, which is the kind of failure that only CI notices.
      */

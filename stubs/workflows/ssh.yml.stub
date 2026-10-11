@@ -13,9 +13,11 @@ on:
       - '.github/workflows/{{ workflow_file }}'
   workflow_dispatch:
 
+# A newer push waits for the running deploy instead of cancelling it: a
+# deploy stopped halfway can leave the site with half its files.
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -25,7 +27,7 @@ jobs:
         working-directory: {{ path }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
 {{ setup }}
 
@@ -43,11 +45,19 @@ jobs:
           SSH_USER: ${{ secrets.LANDING_SSH_USER }}
           SSH_KEY: ${{ secrets.LANDING_SSH_KEY }}
           SSH_PATH: ${{ secrets.LANDING_SSH_PATH }}
+          # Optional: the server's line from known_hosts. Without it the host
+          # key is taken from the server on every run, which trusts whatever
+          # answers at that address.
+          SSH_KNOWN_HOSTS: ${{ secrets.LANDING_SSH_KNOWN_HOSTS }}
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/landing_deploy
           chmod 600 ~/.ssh/landing_deploy
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          fi
           rsync -az --delete \
             -e "ssh -i ~/.ssh/landing_deploy -p $SSH_PORT" \
             dist/ "$SSH_USER@$SSH_HOST:$SSH_PATH"

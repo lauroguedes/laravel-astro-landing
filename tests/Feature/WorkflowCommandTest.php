@@ -111,3 +111,13 @@ it('rejects what it cannot write', function (array $parameters): void {
     'a path as the file' => [['target' => 'ssh', '--file' => '../ci.yml']],
     'a branch that is not one' => [['target' => 'ssh', '--branch' => 'main; echo']],
 ]);
+
+it('refuses a configured path it cannot put in a workflow', function (): void {
+    config(['landing.path' => "landing'\n  evil: true"]);
+
+    $this->artisan('landing:workflow', ['target' => 'ssh'])
+        ->expectsOutputToContain('Check LANDING_PATH')
+        ->assertFailed();
+
+    expect($this->root.'/.github')->not->toBeDirectory();
+});

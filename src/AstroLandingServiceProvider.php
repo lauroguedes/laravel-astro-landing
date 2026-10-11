@@ -57,14 +57,14 @@ final class AstroLandingServiceProvider extends ServiceProvider
 
     /**
      * Adds the landing to `php artisan dev`, which is what `composer run dev`
-     * runs on Laravel 13.
+     * runs on Laravel 13.16 and later.
      *
      * Registered as an artisan command rather than as `npm run dev` in the
      * landing directory, for two reasons: DevCommands has no way to set a
      * working directory, and landing:dev installs the landing's dependencies on
      * a fresh clone before starting the server.
      *
-     * Laravel 12 has no DevCommands, so there it is landing:dev by hand.
+     * Earlier versions have no DevCommands, so there it is landing:dev by hand.
      */
     private function registerDevServer(): void
     {

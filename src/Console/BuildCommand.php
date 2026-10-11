@@ -10,7 +10,7 @@ use LauroGuedes\AstroLanding\Support\Landing;
 
 /**
  * Builds the landing into its dist/ directory, the same way the deploy
- * workflow does — so a build that fails in CI can be reproduced locally.
+ * workflow does, so a build that fails in CI can be reproduced locally.
  */
 final class BuildCommand extends Command
 {

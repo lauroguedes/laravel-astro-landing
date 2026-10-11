@@ -13,8 +13,8 @@ use LauroGuedes\AstroLanding\Exceptions\ThemeNotInstallable;
  * create-astro hands anything containing a slash to giget, which understands
  * owner/repo, owner/repo/sub/dir, a #ref suffix and the gitlab:, bitbucket: and
  * sourcehut: prefixes. Anything without a slash is one of Astro's own examples.
- * This class adds the forms people actually paste — a repository URL, a tree
- * URL, a theme from the catalog — and the word "empty".
+ * This class adds the forms people actually paste (a repository URL, a tree
+ * URL, a theme from the catalog) and the word "empty".
  */
 final readonly class TemplateResolver
 {
@@ -25,11 +25,11 @@ final readonly class TemplateResolver
      * @var array<string, string>
      */
     public const array EXAMPLES = [
-        'basics' => 'Basics — a helpful starter page',
-        'blog' => 'Blog — posts, RSS and a sitemap',
-        'portfolio' => 'Portfolio — a personal site',
-        'starlight' => 'Starlight — a documentation site',
-        'with-tailwindcss' => 'Tailwind CSS — an empty page with Tailwind wired in',
+        'basics' => 'Basics: a helpful starter page',
+        'blog' => 'Blog: posts, RSS and a sitemap',
+        'portfolio' => 'Portfolio: a personal site',
+        'starlight' => 'Starlight: a documentation site',
+        'with-tailwindcss' => 'Tailwind CSS: an empty page with Tailwind wired in',
     ];
 
     public const string EMPTY = 'minimal';
@@ -68,7 +68,7 @@ final readonly class TemplateResolver
      *
      * A tree URL keeps its branch and subdirectory: the first segment after
      * /tree/ is taken as the ref, which is wrong only for a branch name with a
-     * slash in it — and those can still be typed as owner/repo/dir#ref.
+     * slash in it, and those can still be typed as owner/repo/dir#ref.
      */
     public static function fromRepositoryUrl(string $url): ?string
     {

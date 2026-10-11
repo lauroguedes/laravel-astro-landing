@@ -13,9 +13,11 @@ on:
       - '.github/workflows/{{ workflow_file }}'
   workflow_dispatch:
 
+# A newer push waits for the running deploy instead of cancelling it: a
+# deploy stopped halfway can leave the site with half its files.
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -30,7 +32,7 @@ jobs:
         working-directory: {{ path }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
 {{ setup }}
 
@@ -42,7 +44,7 @@ jobs:
         run: {{ build }}
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: {{ path }}/dist
 
@@ -55,4 +57,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

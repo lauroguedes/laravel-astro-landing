@@ -6,7 +6,7 @@ forms people paste.
 | You give | create-astro gets |
 |---|---|
 | `empty` (or nothing) | `minimal` |
-| `basics`, `blog`, `portfolio`, `with-tailwindcss`, … | the same — an example from [withastro/astro/examples](https://github.com/withastro/astro/tree/main/examples) |
+| `basics`, `blog`, `portfolio`, `with-tailwindcss`, … | the same: an example from [withastro/astro/examples](https://github.com/withastro/astro/tree/main/examples) |
 | `starlight` | Starlight's docs starter |
 | `owner/repo` | the repository's default branch |
 | `owner/repo/sub/dir#branch` | that directory on that branch |
@@ -44,3 +44,9 @@ from inside the landing directory.
 npm, pnpm, Yarn and Bun. The default is whatever the application uses, read from
 its lockfile. Afterwards the landing's own lockfile decides, for every command
 and for the deploy workflow; `LANDING_PACKAGE_MANAGER` overrides both.
+
+Templates often ship their author's lockfile. When it belongs to a different
+package manager than the one you chose, the installer removes it, so the
+lockfile your package manager writes is the only one and every later command
+agrees on it. With `--skip-install` there is no lockfile yet, so the installer
+writes your choice into `config/landing.php` instead.

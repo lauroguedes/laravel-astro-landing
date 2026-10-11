@@ -51,6 +51,16 @@ enum PackageManager: string
     }
 
     /**
+     * The lockfiles every other package manager writes.
+     *
+     * @return list<string>
+     */
+    public function foreignLockfiles(): array
+    {
+        return array_keys(array_filter(self::LOCKFILES, fn (self $manager): bool => $manager !== $this));
+    }
+
+    /**
      * @return list<string>
      */
     public static function values(): array
@@ -147,12 +157,12 @@ enum PackageManager: string
                 YAML,
             self::Pnpm => <<<YAML
                       - name: Setup pnpm
-                        uses: pnpm/action-setup@v4
+                        uses: pnpm/action-setup@v6
                         with:
                           version: 10
 
                       - name: Setup Node
-                        uses: actions/setup-node@v6
+                        uses: actions/setup-node@v7
                         with:
                           node-version: lts/*
                           cache: pnpm
@@ -161,7 +171,7 @@ enum PackageManager: string
                 YAML,
             self::Yarn => <<<'YAML'
                       - name: Setup Node
-                        uses: actions/setup-node@v6
+                        uses: actions/setup-node@v7
                         with:
                           node-version: lts/*
 
@@ -171,7 +181,7 @@ enum PackageManager: string
                 YAML,
             self::Npm => <<<YAML
                       - name: Setup Node
-                        uses: actions/setup-node@v6
+                        uses: actions/setup-node@v7
                         with:
                           node-version: lts/*
                           cache: npm

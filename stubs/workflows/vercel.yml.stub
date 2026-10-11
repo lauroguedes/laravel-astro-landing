@@ -13,9 +13,11 @@ on:
       - '.github/workflows/{{ workflow_file }}'
   workflow_dispatch:
 
+# A newer push waits for the running deploy instead of cancelling it: a
+# deploy stopped halfway can leave the site with half its files.
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -25,7 +27,7 @@ jobs:
         working-directory: {{ path }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
 {{ setup }}
 
@@ -36,8 +38,17 @@ jobs:
         #   PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
         run: {{ build }}
 
+      # The site is already built, so it goes up through Vercel's Build Output
+      # API with --prebuilt: Vercel serves the files as they are and does not
+      # run its own build, whatever framework the project is set to.
       - name: Deploy to Vercel
         env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest deploy dist --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          rm -rf .vercel/output
+          mkdir -p .vercel/output
+          cp -R dist .vercel/output/static
+          echo '{"version":3}' > .vercel/output/config.json
+          npx --yes vercel@latest deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"

@@ -10,19 +10,19 @@ Laravel application, and deploy it somewhere else.
 A product's marketing site and the product itself change for different reasons
 and belong on different servers: the landing is static, cheap to host on a CDN
 and edited by whoever writes the copy; the application needs PHP, a database and
-a deploy that runs migrations. Keeping them in one repository keeps them in sync —
-same pull requests, same issues, the landing can link to the routes that actually
-exist — as long as nothing couples them.
+a deploy that runs migrations. Keeping them in one repository keeps them in sync
+(same pull requests, same issues, and a landing that links to the routes that
+actually exist), as long as nothing couples them.
 
 This package is the decoupling, set up in one command:
 
 - **`landing:install`** creates the Astro project in `landing/` from an empty
   template, an official example, any template repository, or a free theme from
   the [Astro themes catalog](https://astro.build/themes/).
-- **`composer run dev`** starts the landing next to the application (Laravel 13).
+- **`composer run dev`** starts the landing next to the application (Laravel 13.16+).
 - **`landing:workflow`** writes a GitHub Actions workflow that builds and deploys
   the landing to Cloudflare Pages, Netlify, Vercel, GitHub Pages or your own
-  server — and runs only when the landing changed.
+  server, and runs only when the landing changed.
 
 ## Installation
 
@@ -34,13 +34,14 @@ php artisan landing:install
 It is a development dependency: nothing in it runs on the server that serves
 your application. The landing is deployed by GitHub Actions, not by PHP.
 
-`landing:install` asks four things — where the landing lives, what it starts
-from, which package manager to use and where it deploys — then runs
-`create-astro`, installs the dependencies and wires the rest:
+`landing:install` asks where the landing lives, what it starts from, which
+package manager to use and where it deploys (plus, for an empty project, which
+integrations to add), then runs `create-astro`, installs the dependencies and
+wires the rest:
 
 ```
  ┌ What should the landing start from? ─────────────────────────┐
- │ › ● An empty project — Astro's minimal template              │
+ │ › ● An empty project: Astro's minimal template               │
  │   ○ An official Astro example                                │
  │   ○ A template repository on GitHub, GitLab or Bitbucket     │
  │   ○ A free theme from astro.build/themes                     │
@@ -88,17 +89,17 @@ php artisan landing:install --no-interaction \
 
 ## Running it
 
-On Laravel 13, `composer run dev` (which runs `php artisan dev`) starts the
+On Laravel 13.16 and later, `composer run dev` (which runs `php artisan dev`) starts the
 landing as one more process, at http://localhost:4321:
 
 ```
+ landing php artisan landing:dev
  server  php artisan serve
  queue   php artisan queue:listen --tries=1 --timeout=0
  vite    npm run dev
- landing php artisan landing:dev
 ```
 
-On its own, or on Laravel 12:
+On its own, or on earlier Laravel versions:
 
 ```bash
 php artisan landing:dev     # astro dev
@@ -121,7 +122,7 @@ php artisan landing:workflow cloudflare-pages
 | `netlify` | `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID` |
 | `vercel` | `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` |
 | `github-pages` | none |
-| `ssh` | `LANDING_SSH_HOST`, `LANDING_SSH_USER`, `LANDING_SSH_KEY`, `LANDING_SSH_PATH` |
+| `ssh` | `LANDING_SSH_HOST`, `LANDING_SSH_USER`, `LANDING_SSH_KEY`, `LANDING_SSH_PATH`; optional `LANDING_SSH_PORT`, `LANDING_SSH_KNOWN_HOSTS` |
 
 The workflow is filtered to `landing/**`, so a change to the application never
 redeploys the landing. Do the reverse in your application's workflows:
@@ -140,7 +141,7 @@ php artisan landing:workflow cloudflare-pages
 php artisan landing:workflow ssh --file=deploy-landing-mirror
 ```
 
-To change every workflow this package writes, publish the stubs — they are read
+To change every workflow this package writes, publish the stubs. They are read
 from `stubs/landing/workflows` before the package's own:
 
 ```bash

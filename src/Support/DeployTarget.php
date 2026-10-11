@@ -8,7 +8,7 @@ namespace LauroGuedes\AstroLanding\Support;
  * Where a landing can be deployed by the generated GitHub Actions workflow.
  *
  * Each case is one stub in stubs/workflows, and the secrets and variables it
- * reads — listed here so the installer can say what to add to the repository
+ * reads, listed here so the installer can say what to add to the repository
  * before the first push, rather than leaving the first run to fail and say it.
  */
 enum DeployTarget: string
@@ -74,11 +74,11 @@ enum DeployTarget: string
     public function note(): string
     {
         return match ($this) {
-            self::CloudflarePages => 'Create the Pages project once (wrangler pages project create, or the dashboard) — the name is in the workflow.',
+            self::CloudflarePages => 'Create the Pages project once (wrangler pages project create, or the dashboard). The name is in the workflow.',
             self::Netlify => 'Create the site once in Netlify and copy its Site ID.',
             self::Vercel => 'Run `vercel link` in the landing directory once to get the org and project IDs (.vercel/project.json).',
             self::GitHubPages => 'Set Settings → Pages → Source to "GitHub Actions". Serving from a project page (user.github.io/repo) also needs `base` in astro.config.mjs.',
-            self::Ssh => 'LANDING_SSH_KEY is a private key whose public half is in the server user\'s authorized_keys. LANDING_SSH_PORT is optional and defaults to 22.',
+            self::Ssh => 'LANDING_SSH_KEY is a private key whose public half is in the server user\'s authorized_keys. Optional: LANDING_SSH_PORT (default 22), and LANDING_SSH_KNOWN_HOSTS to pin the server\'s host key.',
         };
     }
 }
