@@ -8,6 +8,8 @@
 Keep an [Astro](https://astro.build) landing page in the same repository as your
 Laravel application, and deploy it somewhere else.
 
+<img width="2172" height="724" alt="Laravel + Astro Glassmorphism Banner" src="https://github.com/user-attachments/assets/649cff0c-bf64-4e5a-95cc-baf7d1583cc4" />
+
 A product's marketing site and the product itself change for different reasons
 and belong on different servers: the landing is static, cheap to host on a CDN
 and edited by whoever writes the copy; the application needs PHP, a database and
