@@ -1,6 +1,6 @@
 ---
 name: astro-landing-development
-description: Build, configure and deploy the Astro landing page that lives inside this Laravel application (lauroguedes/laravel-astro-landing): installing it from a template or theme, running it with composer run dev, sharing data with the Laravel app, and deploying it on its own with GitHub Actions.
+description: "Build, configure and deploy the Astro landing page that lives inside this Laravel application (lauroguedes/laravel-astro-landing): installing it from a template or theme, running it with composer run dev, sharing data with the Laravel app, and deploying it on its own with GitHub Actions."
 ---
 
 # Astro landing development
